@@ -154,6 +154,217 @@ public final class ReminderService {
         return reminders
     }
 
+    /// Creates a new reminder in the specified reminder list.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameters:
+    ///   - title: The title of the reminder. Must not be empty.
+    ///   - notes: Optional notes to attach to the reminder.
+    ///   - dueDate: Optional due date for the reminder.
+    ///   - priority: The priority level (0 = none, 1-4 = high, 5 = medium, 6-9 = low). Defaults to 0.
+    ///   - list: The reminder list to add the reminder to.
+    /// - Returns: The newly created reminder.
+    /// - Throws: An error if creation fails, if permissions are not granted, if the title is empty, or if the list is not found.
+    @discardableResult
+    public func createReminder(
+        title: String,
+        notes: String? = nil,
+        dueDate: Date? = nil,
+        priority: Int = 0,
+        in list: ReminderList
+    ) async throws -> Reminder {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Validate title
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ReminderServiceError.invalidTitle
+        }
+
+        // Find the calendar for the specified list
+        guard let calendar = permissionService.eventStore.calendar(withIdentifier: list.id) else {
+            throw ReminderServiceError.listNotFound
+        }
+
+        // Create the EKReminder
+        let ekReminder = EKReminder(eventStore: permissionService.eventStore)
+        ekReminder.calendar = calendar
+        ekReminder.title = title
+        ekReminder.notes = notes
+        ekReminder.priority = priority
+
+        // Set due date if provided
+        if let dueDate = dueDate {
+            let calendar = FoundationCalendar.current
+            ekReminder.dueDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
+        }
+
+        // Save to EventKit
+        do {
+            try permissionService.eventStore.save(ekReminder, commit: true)
+        } catch {
+            throw ReminderServiceError.saveFailed
+        }
+
+        // Convert to our model and return
+        return Reminder(from: ekReminder)
+    }
+
+    /// Updates an existing reminder.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    /// Only the provided (non-nil) parameters will be updated; others remain unchanged.
+    ///
+    /// - Parameters:
+    ///   - reminderId: The unique identifier of the reminder to update.
+    ///   - title: Optional new title for the reminder.
+    ///   - notes: Optional new notes for the reminder. Pass empty string to clear notes.
+    ///   - dueDate: Optional new due date for the reminder. Pass nil to clear the due date.
+    ///   - priority: Optional new priority level.
+    ///   - list: Optional new reminder list to move the reminder to.
+    /// - Returns: The updated reminder.
+    /// - Throws: An error if updating fails, if permissions are not granted, if the reminder is not found, or if the new list is not found.
+    @discardableResult
+    public func updateReminder(
+        _ reminderId: String,
+        title: String? = nil,
+        notes: String? = nil,
+        dueDate: Date? = nil,
+        priority: Int? = nil,
+        moveTo list: ReminderList? = nil
+    ) async throws -> Reminder {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Find the existing reminder
+        guard let ekReminder = permissionService.eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
+            throw ReminderServiceError.reminderNotFound
+        }
+
+        // Update title if provided
+        if let title = title {
+            guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ReminderServiceError.invalidTitle
+            }
+            ekReminder.title = title
+        }
+
+        // Update notes if provided
+        if let notes = notes {
+            ekReminder.notes = notes.isEmpty ? nil : notes
+        }
+
+        // Update due date if provided
+        if let dueDate = dueDate {
+            let calendar = FoundationCalendar.current
+            ekReminder.dueDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
+        }
+
+        // Update priority if provided
+        if let priority = priority {
+            ekReminder.priority = priority
+        }
+
+        // Move to new list if provided
+        if let list = list {
+            guard let calendar = permissionService.eventStore.calendar(withIdentifier: list.id) else {
+                throw ReminderServiceError.listNotFound
+            }
+            ekReminder.calendar = calendar
+        }
+
+        // Save changes to EventKit
+        do {
+            try permissionService.eventStore.save(ekReminder, commit: true)
+        } catch {
+            throw ReminderServiceError.saveFailed
+        }
+
+        // Convert to our model and return
+        return Reminder(from: ekReminder)
+    }
+
+    /// Deletes a reminder by its identifier.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameter reminderId: The unique identifier of the reminder to delete.
+    /// - Throws: An error if deletion fails, if permissions are not granted, or if the reminder is not found.
+    public func deleteReminder(_ reminderId: String) async throws {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Find the reminder
+        guard let ekReminder = permissionService.eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
+            throw ReminderServiceError.reminderNotFound
+        }
+
+        // Delete from EventKit
+        do {
+            try permissionService.eventStore.remove(ekReminder, commit: true)
+        } catch {
+            throw ReminderServiceError.deleteFailed
+        }
+    }
+
+    /// Deletes a reminder by its model object.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameter reminder: The reminder to delete.
+    /// - Throws: An error if deletion fails, if permissions are not granted, or if the reminder is not found.
+    public func deleteReminder(_ reminder: Reminder) async throws {
+        try await deleteReminder(reminder.id)
+    }
+
+    /// Toggles the completion status of a reminder by its identifier.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameter reminderId: The unique identifier of the reminder to toggle.
+    /// - Returns: The updated reminder with toggled completion status.
+    /// - Throws: An error if updating fails, if permissions are not granted, or if the reminder is not found.
+    @discardableResult
+    public func toggleReminderCompletion(_ reminderId: String) async throws -> Reminder {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Find the reminder
+        guard let ekReminder = permissionService.eventStore.calendarItem(withIdentifier: reminderId) as? EKReminder else {
+            throw ReminderServiceError.reminderNotFound
+        }
+
+        // Toggle completion status
+        ekReminder.isCompleted = !ekReminder.isCompleted
+
+        // Save changes to EventKit
+        do {
+            try permissionService.eventStore.save(ekReminder, commit: true)
+        } catch {
+            throw ReminderServiceError.saveFailed
+        }
+
+        // Convert to our model and return
+        return Reminder(from: ekReminder)
+    }
+
+    /// Toggles the completion status of a reminder by its model object.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameter reminder: The reminder to toggle.
+    /// - Returns: The updated reminder with toggled completion status.
+    /// - Throws: An error if updating fails, if permissions are not granted, or if the reminder is not found.
+    @discardableResult
+    public func toggleReminderCompletion(_ reminder: Reminder) async throws -> Reminder {
+        try await toggleReminderCompletion(reminder.id)
+    }
+
     // MARK: - Private Methods
 
     /// Applies the specified filter to an array of reminders.
@@ -260,12 +471,32 @@ public enum ReminderServiceError: Error, LocalizedError {
     /// The specified reminder list was not found.
     case listNotFound
 
+    /// The specified reminder was not found.
+    case reminderNotFound
+
+    /// The reminder could not be saved.
+    case saveFailed
+
+    /// The reminder could not be deleted.
+    case deleteFailed
+
+    /// The reminder title is invalid (empty or missing).
+    case invalidTitle
+
     public var errorDescription: String? {
         switch self {
         case .permissionDenied:
             return "Permission to access reminders has been denied. Please grant access in Settings."
         case .listNotFound:
             return "The specified reminder list could not be found."
+        case .reminderNotFound:
+            return "The specified reminder could not be found."
+        case .saveFailed:
+            return "Failed to save the reminder to EventKit."
+        case .deleteFailed:
+            return "Failed to delete the reminder from EventKit."
+        case .invalidTitle:
+            return "The reminder title cannot be empty."
         }
     }
 }
