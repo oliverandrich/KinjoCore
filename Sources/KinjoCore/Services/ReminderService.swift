@@ -114,15 +114,13 @@ public final class ReminderService {
             }
             source = foundSource
         } else {
-            // Use default source for new calendars, or fall back to any available source
+            // Try default source first
             if let defaultSource = permissionService.eventStore.defaultCalendarForNewReminders()?.source {
                 source = defaultSource
             } else {
-                // Fall back to first available source that supports reminders
-                let availableSources = permissionService.eventStore.sources.filter { source in
-                    source.sourceType == .local || source.sourceType == .calDAV
-                }
-                guard let foundSource = availableSources.first else {
+                // Fall back to any available source
+                let allSources = permissionService.eventStore.sources
+                guard let foundSource = allSources.first else {
                     throw ReminderServiceError.sourceNotFound
                 }
                 source = foundSource
