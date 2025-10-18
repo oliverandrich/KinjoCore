@@ -95,6 +95,136 @@ struct ReminderFetchTests {
         #expect(reminder.completionDate == nil)
     }
 
+    @Test("Reminder hasTags returns correct value")
+    func reminderHasTagsReturnsCorrectValue() {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Reminder with tags
+        let ekReminder1 = EKReminder(eventStore: store)
+        ekReminder1.calendar = calendar
+        ekReminder1.title = "Test"
+        ekReminder1.notes = "Meeting #work #important"
+
+        let reminder1 = Reminder(from: ekReminder1)
+        #expect(reminder1.hasTags == true)
+
+        // Reminder without tags
+        let ekReminder2 = EKReminder(eventStore: store)
+        ekReminder2.calendar = calendar
+        ekReminder2.title = "Test"
+        ekReminder2.notes = "Just regular notes"
+
+        let reminder2 = Reminder(from: ekReminder2)
+        #expect(reminder2.hasTags == false)
+
+        // Reminder with nil notes
+        let ekReminder3 = EKReminder(eventStore: store)
+        ekReminder3.calendar = calendar
+        ekReminder3.title = "Test"
+        ekReminder3.notes = nil
+
+        let reminder3 = Reminder(from: ekReminder3)
+        #expect(reminder3.hasTags == false)
+    }
+
+    @Test("Reminder hasNote returns correct value")
+    func reminderHasNoteReturnsCorrectValue() {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Reminder with notes
+        let ekReminder1 = EKReminder(eventStore: store)
+        ekReminder1.calendar = calendar
+        ekReminder1.title = "Test"
+        ekReminder1.notes = "Some notes"
+
+        let reminder1 = Reminder(from: ekReminder1)
+        #expect(reminder1.hasNote == true)
+
+        // Reminder with nil notes
+        let ekReminder2 = EKReminder(eventStore: store)
+        ekReminder2.calendar = calendar
+        ekReminder2.title = "Test"
+        ekReminder2.notes = nil
+
+        let reminder2 = Reminder(from: ekReminder2)
+        #expect(reminder2.hasNote == false)
+
+        // Reminder with empty/whitespace-only notes
+        let ekReminder3 = EKReminder(eventStore: store)
+        ekReminder3.calendar = calendar
+        ekReminder3.title = "Test"
+        ekReminder3.notes = "   "
+
+        let reminder3 = Reminder(from: ekReminder3)
+        #expect(reminder3.hasNote == false)
+    }
+
+    @Test("Reminder hasURL detects URLs in title")
+    func reminderHasURLDetectsURLsInTitle() {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Reminder with URL in title
+        let ekReminder1 = EKReminder(eventStore: store)
+        ekReminder1.calendar = calendar
+        ekReminder1.title = "Check https://example.com for info"
+        ekReminder1.notes = nil
+
+        let reminder1 = Reminder(from: ekReminder1)
+        #expect(reminder1.hasURL == true)
+
+        // Reminder without URL
+        let ekReminder2 = EKReminder(eventStore: store)
+        ekReminder2.calendar = calendar
+        ekReminder2.title = "Regular reminder"
+        ekReminder2.notes = nil
+
+        let reminder2 = Reminder(from: ekReminder2)
+        #expect(reminder2.hasURL == false)
+    }
+
+    @Test("Reminder hasURL detects URLs in notes")
+    func reminderHasURLDetectsURLsInNotes() {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Reminder with URL in notes
+        let ekReminder1 = EKReminder(eventStore: store)
+        ekReminder1.calendar = calendar
+        ekReminder1.title = "Check documentation"
+        ekReminder1.notes = "See https://docs.example.com for details"
+
+        let reminder1 = Reminder(from: ekReminder1)
+        #expect(reminder1.hasURL == true)
+
+        // Reminder with URL in both title and notes
+        let ekReminder2 = EKReminder(eventStore: store)
+        ekReminder2.calendar = calendar
+        ekReminder2.title = "Visit https://example.com"
+        ekReminder2.notes = "Also check https://docs.example.com"
+
+        let reminder2 = Reminder(from: ekReminder2)
+        #expect(reminder2.hasURL == true)
+    }
+
     @Test("ReminderFilter enum has all cases")
     func reminderFilterHasAllCases() {
         let allFilter: ReminderFilter = .all

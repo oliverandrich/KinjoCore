@@ -82,6 +82,44 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         return Array(Set(extractedTags)).sorted()
     }
 
+    /// Whether this reminder has any tags in its notes.
+    public var hasTags: Bool {
+        !tags.isEmpty
+    }
+
+    /// Whether this reminder has notes.
+    public var hasNote: Bool {
+        guard let notes = notes else { return false }
+        return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Whether this reminder contains a URL in its title or notes.
+    ///
+    /// Uses `NSDataDetector` to detect URLs in both the title and notes fields.
+    public var hasURL: Bool {
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+
+        // Check title for URLs
+        let titleRange = NSRange(title.startIndex..., in: title)
+        if let match = detector?.firstMatch(in: title, options: [], range: titleRange) {
+            if match.resultType == .link {
+                return true
+            }
+        }
+
+        // Check notes for URLs
+        if let notes = notes {
+            let notesRange = NSRange(notes.startIndex..., in: notes)
+            if let match = detector?.firstMatch(in: notes, options: [], range: notesRange) {
+                if match.resultType == .link {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
     // MARK: - Initialisation
 
     /// Creates a reminder from an EventKit reminder.
