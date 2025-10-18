@@ -54,6 +54,9 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     /// The reminder list (calendar) this reminder belongs to.
     public let calendarID: String
 
+    /// The URL associated with the reminder, if specified.
+    public let url: URL?
+
     /// Tags extracted from the notes field.
     ///
     /// Tags are identified by the # prefix (e.g., #work, #important).
@@ -93,10 +96,16 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Whether this reminder contains a URL in its title or notes.
+    /// Whether this reminder contains a URL.
     ///
-    /// Uses `NSDataDetector` to detect URLs in both the title and notes fields.
+    /// Checks the URL field first, then uses `NSDataDetector` to detect URLs
+    /// in both the title and notes fields.
     public var hasURL: Bool {
+        // Check URL field first
+        if url != nil {
+            return true
+        }
+
         let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
 
         // Check title for URLs
@@ -136,6 +145,7 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.lastModifiedDate = reminder.lastModifiedDate
         self.completionDate = reminder.completionDate
         self.calendarID = reminder.calendar?.calendarIdentifier ?? ""
+        self.url = reminder.url
     }
 
     // MARK: - Hashable

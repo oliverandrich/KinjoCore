@@ -225,6 +225,36 @@ struct ReminderFetchTests {
         #expect(reminder2.hasURL == true)
     }
 
+    @Test("Reminder hasURL detects URL in URL field")
+    func reminderHasURLDetectsURLInURLField() {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Reminder with URL in url field
+        let ekReminder1 = EKReminder(eventStore: store)
+        ekReminder1.calendar = calendar
+        ekReminder1.title = "Check website"
+        ekReminder1.url = URL(string: "https://example.com")
+
+        let reminder1 = Reminder(from: ekReminder1)
+        #expect(reminder1.hasURL == true)
+        #expect(reminder1.url == URL(string: "https://example.com"))
+
+        // Reminder without any URLs
+        let ekReminder2 = EKReminder(eventStore: store)
+        ekReminder2.calendar = calendar
+        ekReminder2.title = "Regular reminder"
+        ekReminder2.notes = "No URLs here"
+
+        let reminder2 = Reminder(from: ekReminder2)
+        #expect(reminder2.hasURL == false)
+        #expect(reminder2.url == nil)
+    }
+
     @Test("Priority enum converts from EventKit values")
     func priorityEnumConvertsFromEventKitValues() {
         #expect(Priority(eventKitValue: 0) == .none)
