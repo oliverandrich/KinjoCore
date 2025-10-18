@@ -102,6 +102,7 @@ test: add unit tests for FoundationModels integration
 - Include breaking changes with `BREAKING CHANGE:` in footer or `!` after type: `feat!: change service API`
 - **Do not mention** EUPL 1.2 licence headers or British English documentation adherence in commit messages (these are project standards and don't need to be stated in every commit)
 - **Keep commit messages compact**: Be informative but concise. Avoid overly verbose bodies - focus on key changes and rationale, not exhaustive implementation details
+- **Do not include test counts or results** in commit messages (e.g., "17 tests passing", "69 tests total") - tests are verified by CI and the counts change frequently
 
 ## Code Architecture
 
