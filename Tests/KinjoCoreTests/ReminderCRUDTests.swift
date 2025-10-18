@@ -146,6 +146,8 @@ struct ReminderCRUDTests {
             in: firstList
         )
 
+        let originalModifiedDate = reminder.lastModifiedDate
+
         // Update title
         let updatedReminder = try await reminderService.updateReminder(
             reminder.id,
@@ -154,6 +156,11 @@ struct ReminderCRUDTests {
 
         #expect(updatedReminder.title == "Updated Title")
         #expect(updatedReminder.id == reminder.id)
+
+        // lastModifiedDate should be updated (or at least present)
+        #expect(updatedReminder.lastModifiedDate != nil)
+        // Note: We can't reliably test if it's newer than original since
+        // the timestamp might be the same if update happens very quickly
 
         // Clean up
         try? await reminderService.deleteReminder(reminder)
@@ -396,14 +403,17 @@ struct ReminderCRUDTests {
         )
 
         #expect(!reminder.isCompleted)
+        #expect(reminder.completionDate == nil)
 
         // Toggle to completed
         let completed = try await reminderService.toggleReminderCompletion(reminder.id)
         #expect(completed.isCompleted)
+        #expect(completed.completionDate != nil) // Should have completion date
 
         // Toggle back to incomplete
         let incomplete = try await reminderService.toggleReminderCompletion(reminder.id)
         #expect(!incomplete.isCompleted)
+        // Note: completionDate might still be set even when uncompleted
 
         // Clean up
         try? await reminderService.deleteReminder(reminder)

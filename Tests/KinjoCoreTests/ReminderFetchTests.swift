@@ -68,6 +68,33 @@ struct ReminderFetchTests {
         #expect(reminder.isCompleted == false)
     }
 
+    @Test("Reminder model includes lastModifiedDate and completionDate")
+    func reminderIncludesTimestamps() async throws {
+        let permissionService = PermissionService()
+        let store = permissionService.eventStore
+
+        guard let calendar = store.calendars(for: .reminder).first else {
+            return
+        }
+
+        // Create a new reminder
+        let ekReminder = EKReminder(eventStore: store)
+        ekReminder.calendar = calendar
+        ekReminder.title = "Test Timestamps"
+
+        let reminder = Reminder(from: ekReminder)
+
+        // Verify the new properties exist and can be accessed
+        // Note: Unsaved reminders may have nil timestamps
+        _ = reminder.creationDate
+        _ = reminder.lastModifiedDate
+        _ = reminder.completionDate
+
+        // completionDate should be nil when not completed
+        #expect(reminder.isCompleted == false)
+        #expect(reminder.completionDate == nil)
+    }
+
     @Test("ReminderFilter enum has all cases")
     func reminderFilterHasAllCases() {
         let allFilter: ReminderFilter = .all

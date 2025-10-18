@@ -45,6 +45,12 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     /// The date when this reminder was created.
     public let creationDate: Date?
 
+    /// The date when this reminder was last modified.
+    public let lastModifiedDate: Date?
+
+    /// The date when this reminder was completed, if it has been completed.
+    public let completionDate: Date?
+
     /// The reminder list (calendar) this reminder belongs to.
     public let calendarID: String
 
@@ -61,6 +67,8 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.priority = reminder.priority
         self.isCompleted = reminder.isCompleted
         self.creationDate = reminder.creationDate
+        self.lastModifiedDate = reminder.lastModifiedDate
+        self.completionDate = reminder.completionDate
         self.calendarID = reminder.calendar?.calendarIdentifier ?? ""
     }
 
