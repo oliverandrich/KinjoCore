@@ -79,6 +79,193 @@ public final class ReminderService {
         return lists
     }
 
+    /// Creates a new reminder list in EventKit.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    ///
+    /// - Parameters:
+    ///   - title: The title of the new reminder list. Must not be empty.
+    ///   - color: The colour to associate with the reminder list. Defaults to system blue.
+    ///   - sourceType: The source type for the list (e.g., .local, .calDAV for iCloud). If nil, uses the default source.
+    /// - Returns: The newly created reminder list.
+    /// - Throws: An error if creation fails, if permissions are not granted, if the title is empty, or if the source is not found.
+    @discardableResult
+    public func createReminderList(
+        title: String,
+        color: CGColor? = nil,
+        sourceType: EKSourceType? = nil
+    ) async throws -> ReminderList {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Validate title
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw ReminderServiceError.invalidListTitle
+        }
+
+        // Find appropriate source
+        let source: EKSource
+        if let sourceType = sourceType {
+            // Find source of specified type
+            let sources = permissionService.eventStore.sources.filter { $0.sourceType == sourceType }
+            guard let foundSource = sources.first else {
+                throw ReminderServiceError.sourceNotFound
+            }
+            source = foundSource
+        } else {
+            // Use default source for new calendars, or fall back to any available source
+            if let defaultSource = permissionService.eventStore.defaultCalendarForNewReminders()?.source {
+                source = defaultSource
+            } else {
+                // Fall back to first available source that supports reminders
+                let availableSources = permissionService.eventStore.sources.filter { source in
+                    source.sourceType == .local || source.sourceType == .calDAV
+                }
+                guard let foundSource = availableSources.first else {
+                    throw ReminderServiceError.sourceNotFound
+                }
+                source = foundSource
+            }
+        }
+
+        // Create the calendar
+        let calendar = EKCalendar(for: .reminder, eventStore: permissionService.eventStore)
+        calendar.title = title
+        calendar.source = source
+
+        // Set colour if provided
+        if let color = color {
+            calendar.cgColor = color
+        }
+
+        // Save to EventKit
+        do {
+            try permissionService.eventStore.saveCalendar(calendar, commit: true)
+        } catch {
+            throw ReminderServiceError.saveFailed
+        }
+
+        // Convert to our model and return
+        return ReminderList(from: calendar)
+    }
+
+    /// Updates an existing reminder list.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    /// Only the provided (non-nil) parameters will be updated; others remain unchanged.
+    ///
+    /// - Parameters:
+    ///   - listId: The unique identifier of the reminder list to update.
+    ///   - title: Optional new title for the reminder list.
+    ///   - color: Optional new colour for the reminder list.
+    /// - Returns: The updated reminder list.
+    /// - Throws: An error if updating fails, if permissions are not granted, if the list is not found, if the list is immutable, or if the title is empty.
+    @discardableResult
+    public func updateReminderList(
+        _ listId: String,
+        title: String? = nil,
+        color: CGColor? = nil
+    ) async throws -> ReminderList {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Find the existing calendar
+        guard let calendar = permissionService.eventStore.calendar(withIdentifier: listId) else {
+            throw ReminderServiceError.listNotFound
+        }
+
+        // Check if the calendar is immutable
+        guard calendar.allowsContentModifications else {
+            throw ReminderServiceError.listImmutable
+        }
+
+        // Update title if provided
+        if let title = title {
+            guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw ReminderServiceError.invalidListTitle
+            }
+            calendar.title = title
+        }
+
+        // Update colour if provided
+        if let color = color {
+            calendar.cgColor = color
+        }
+
+        // Save changes to EventKit
+        do {
+            try permissionService.eventStore.saveCalendar(calendar, commit: true)
+        } catch {
+            throw ReminderServiceError.saveFailed
+        }
+
+        // Convert to our model and return
+        return ReminderList(from: calendar)
+    }
+
+    /// Updates an existing reminder list by its model object.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    /// Only the provided (non-nil) parameters will be updated; others remain unchanged.
+    ///
+    /// - Parameters:
+    ///   - list: The reminder list to update.
+    ///   - title: Optional new title for the reminder list.
+    ///   - color: Optional new colour for the reminder list.
+    /// - Returns: The updated reminder list.
+    /// - Throws: An error if updating fails, if permissions are not granted, if the list is not found, if the list is immutable, or if the title is empty.
+    @discardableResult
+    public func updateReminderList(
+        _ list: ReminderList,
+        title: String? = nil,
+        color: CGColor? = nil
+    ) async throws -> ReminderList {
+        try await updateReminderList(list.id, title: title, color: color)
+    }
+
+    /// Deletes a reminder list by its identifier.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    /// **Warning:** This will also delete all reminders contained in the list.
+    ///
+    /// - Parameter listId: The unique identifier of the reminder list to delete.
+    /// - Throws: An error if deletion fails, if permissions are not granted, if the list is not found, or if the list is immutable.
+    public func deleteReminderList(_ listId: String) async throws {
+        guard permissionService.hasReminderAccess else {
+            throw ReminderServiceError.permissionDenied
+        }
+
+        // Find the calendar
+        guard let calendar = permissionService.eventStore.calendar(withIdentifier: listId) else {
+            throw ReminderServiceError.listNotFound
+        }
+
+        // Check if the calendar is immutable
+        guard calendar.allowsContentModifications else {
+            throw ReminderServiceError.listImmutable
+        }
+
+        // Delete from EventKit
+        do {
+            try permissionService.eventStore.removeCalendar(calendar, commit: true)
+        } catch {
+            throw ReminderServiceError.deleteFailed
+        }
+    }
+
+    /// Deletes a reminder list by its model object.
+    ///
+    /// This method requires that the app has permission to access reminders.
+    /// **Warning:** This will also delete all reminders contained in the list.
+    ///
+    /// - Parameter list: The reminder list to delete.
+    /// - Throws: An error if deletion fails, if permissions are not granted, if the list is not found, or if the list is immutable.
+    public func deleteReminderList(_ list: ReminderList) async throws {
+        try await deleteReminderList(list.id)
+    }
+
     /// Fetches reminders from EventKit with optional filtering and sorting.
     ///
     /// This method requires that the app has permission to access reminders.
@@ -515,6 +702,15 @@ public enum ReminderServiceError: Error, LocalizedError {
     /// The reminder title is invalid (empty or missing).
     case invalidTitle
 
+    /// The reminder list is immutable (read-only) and cannot be modified or deleted.
+    case listImmutable
+
+    /// The reminder list title is invalid (empty or missing).
+    case invalidListTitle
+
+    /// The source for creating a reminder list was not found.
+    case sourceNotFound
+
     public var errorDescription: String? {
         switch self {
         case .permissionDenied:
@@ -529,6 +725,12 @@ public enum ReminderServiceError: Error, LocalizedError {
             return "Failed to delete the reminder from EventKit."
         case .invalidTitle:
             return "The reminder title cannot be empty."
+        case .listImmutable:
+            return "The reminder list is read-only and cannot be modified or deleted."
+        case .invalidListTitle:
+            return "The reminder list title cannot be empty."
+        case .sourceNotFound:
+            return "The source for creating the reminder list could not be found."
         }
     }
 }
