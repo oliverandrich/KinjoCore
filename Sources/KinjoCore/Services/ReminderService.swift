@@ -88,6 +88,7 @@ public final class ReminderService {
     ///   - from: Which reminder lists to fetch from. Defaults to `.all`.
     ///   - filter: The filter to apply (all, completed, or incomplete). Defaults to `.all`.
     ///   - dateRange: The date range filter to apply. Defaults to `.all`.
+    ///   - tagFilter: The tag filter to apply. Defaults to `.none`.
     ///   - sortBy: The sort option to apply. Defaults to `.title`.
     /// - Returns: An array of filtered and sorted reminders.
     /// - Throws: An error if fetching fails, if permissions are not granted, or if a specified list is not found.
@@ -96,6 +97,7 @@ public final class ReminderService {
         from: ReminderListSelection = .all,
         filter: ReminderFilter = .all,
         dateRange: DateRangeFilter = .all,
+        tagFilter: TagFilter = .none,
         sortBy: ReminderSortOption = .title
     ) async throws -> [Reminder] {
         guard permissionService.hasReminderAccess else {
@@ -144,6 +146,9 @@ public final class ReminderService {
 
         // Apply date range filter
         reminders = self.applyDateFilter(dateRange, to: reminders)
+
+        // Apply tag filter
+        reminders = self.applyTagFilter(tagFilter, to: reminders)
 
         // Apply sorting
         reminders = self.applySort(sortBy, to: reminders)
@@ -396,6 +401,38 @@ public final class ReminderService {
 
             // Check if due date falls within the range
             return dueDate >= range.start && dueDate < range.end
+        }
+    }
+
+    /// Applies the specified tag filter to an array of reminders.
+    ///
+    /// Tags are extracted from the reminder's notes field and compared case-insensitively.
+    private func applyTagFilter(_ tagFilter: TagFilter, to reminders: [Reminder]) -> [Reminder] {
+        switch tagFilter {
+        case .none:
+            return reminders
+
+        case .hasTag(let tag):
+            let lowercaseTag = tag.lowercased()
+            return reminders.filter { $0.tags.contains(lowercaseTag) }
+
+        case .hasAnyTag(let tags):
+            let lowercaseTags = Set(tags.map { $0.lowercased() })
+            return reminders.filter { reminder in
+                !Set(reminder.tags).isDisjoint(with: lowercaseTags)
+            }
+
+        case .hasAllTags(let tags):
+            let lowercaseTags = Set(tags.map { $0.lowercased() })
+            return reminders.filter { reminder in
+                lowercaseTags.isSubset(of: Set(reminder.tags))
+            }
+
+        case .excludingTags(let tags):
+            let lowercaseTags = Set(tags.map { $0.lowercased() })
+            return reminders.filter { reminder in
+                Set(reminder.tags).isDisjoint(with: lowercaseTags)
+            }
         }
     }
 

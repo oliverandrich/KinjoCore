@@ -54,6 +54,34 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     /// The reminder list (calendar) this reminder belongs to.
     public let calendarID: String
 
+    /// Tags extracted from the notes field.
+    ///
+    /// Tags are identified by the # prefix (e.g., #work, #important).
+    /// The returned array contains lowercase tag names without the # prefix,
+    /// sorted alphabetically with duplicates removed.
+    ///
+    /// Example: notes = "Meeting #Work #Important #work" → tags = ["important", "work"]
+    public var tags: [String] {
+        guard let notes = notes else { return [] }
+
+        // Regex to match #hashtags (Unicode word characters)
+        let pattern = #"#(\w+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return []
+        }
+
+        let nsRange = NSRange(notes.startIndex..., in: notes)
+        let matches = regex.matches(in: notes, options: [], range: nsRange)
+
+        // Extract tags, convert to lowercase, remove duplicates, and sort
+        let extractedTags = matches.compactMap { match -> String? in
+            guard let range = Range(match.range(at: 1), in: notes) else { return nil }
+            return String(notes[range]).lowercased()
+        }
+
+        return Array(Set(extractedTags)).sorted()
+    }
+
     // MARK: - Initialisation
 
     /// Creates a reminder from an EventKit reminder.
