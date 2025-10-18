@@ -41,7 +41,7 @@ struct ReminderFetchTests {
 
         #expect(reminder.title == "Test Reminder")
         #expect(reminder.notes == "Test notes")
-        #expect(reminder.priority == 1)
+        #expect(reminder.priority == .high)
         #expect(!reminder.id.isEmpty)
         #expect(!reminder.calendarID.isEmpty)
     }
@@ -223,6 +223,59 @@ struct ReminderFetchTests {
 
         let reminder2 = Reminder(from: ekReminder2)
         #expect(reminder2.hasURL == true)
+    }
+
+    @Test("Priority enum converts from EventKit values")
+    func priorityEnumConvertsFromEventKitValues() {
+        #expect(Priority(eventKitValue: 0) == .none)
+        #expect(Priority(eventKitValue: 1) == .high)
+        #expect(Priority(eventKitValue: 2) == .high)
+        #expect(Priority(eventKitValue: 3) == .high)
+        #expect(Priority(eventKitValue: 4) == .high)
+        #expect(Priority(eventKitValue: 5) == .medium)
+        #expect(Priority(eventKitValue: 6) == .low)
+        #expect(Priority(eventKitValue: 7) == .low)
+        #expect(Priority(eventKitValue: 8) == .low)
+        #expect(Priority(eventKitValue: 9) == .low)
+        #expect(Priority(eventKitValue: 99) == .none)  // Out of range
+    }
+
+    @Test("Priority enum converts to EventKit values")
+    func priorityEnumConvertsToEventKitValues() {
+        #expect(Priority.none.eventKitValue == 0)
+        #expect(Priority.high.eventKitValue == 1)
+        #expect(Priority.medium.eventKitValue == 5)
+        #expect(Priority.low.eventKitValue == 9)
+    }
+
+    @Test("Priority enum is comparable")
+    func priorityEnumIsComparable() {
+        // high < medium < low < none
+        #expect(Priority.high < Priority.medium)
+        #expect(Priority.medium < Priority.low)
+        #expect(Priority.low < Priority.none)
+
+        #expect(Priority.high < Priority.none)
+        #expect(Priority.medium < Priority.none)
+
+        // Equality
+        #expect(Priority.high == Priority.high)
+        #expect(!(Priority.high < Priority.high))
+    }
+
+    @Test("Priority enum is hashable")
+    func priorityEnumIsHashable() {
+        var set = Set<Priority>()
+        set.insert(.none)
+        set.insert(.high)
+        set.insert(.medium)
+        set.insert(.low)
+
+        #expect(set.count == 4)
+
+        // Adding same value shouldn't increase count
+        set.insert(.high)
+        #expect(set.count == 4)
     }
 
     @Test("ReminderFilter enum has all cases")

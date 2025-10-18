@@ -48,7 +48,7 @@ struct ReminderCRUDTests {
         #expect(reminder.title == "Test Reminder")
         #expect(reminder.notes == nil)
         #expect(reminder.dueDate == nil)
-        #expect(reminder.priority == 0)
+        #expect(reminder.priority == .none)
         #expect(!reminder.isCompleted)
         #expect(!reminder.id.isEmpty)
 
@@ -78,14 +78,14 @@ struct ReminderCRUDTests {
             title: "Complete Reminder",
             notes: "Test notes",
             dueDate: dueDate,
-            priority: 1,
+            priority: .high,
             in: firstList
         )
 
         #expect(reminder.title == "Complete Reminder")
         #expect(reminder.notes == "Test notes")
         #expect(reminder.dueDate != nil)
-        #expect(reminder.priority == 1)
+        #expect(reminder.priority == .high)
 
         // Clean up
         try? await reminderService.deleteReminder(reminder)
@@ -230,10 +230,10 @@ struct ReminderCRUDTests {
         // Update priority to high
         let updatedReminder = try await reminderService.updateReminder(
             reminder.id,
-            priority: 1
+            priority: .high
         )
 
-        #expect(updatedReminder.priority == 1)
+        #expect(updatedReminder.priority == .high)
 
         // Clean up
         try? await reminderService.deleteReminder(reminder)

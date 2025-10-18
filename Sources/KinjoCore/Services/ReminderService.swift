@@ -167,7 +167,7 @@ public final class ReminderService {
     ///   - title: The title of the reminder. Must not be empty.
     ///   - notes: Optional notes to attach to the reminder.
     ///   - dueDate: Optional due date for the reminder.
-    ///   - priority: The priority level (0 = none, 1-4 = high, 5 = medium, 6-9 = low). Defaults to 0.
+    ///   - priority: The priority level. Defaults to `.none`.
     ///   - list: The reminder list to add the reminder to.
     /// - Returns: The newly created reminder.
     /// - Throws: An error if creation fails, if permissions are not granted, if the title is empty, or if the list is not found.
@@ -176,7 +176,7 @@ public final class ReminderService {
         title: String,
         notes: String? = nil,
         dueDate: Date? = nil,
-        priority: Int = 0,
+        priority: Priority = .none,
         in list: ReminderList
     ) async throws -> Reminder {
         guard permissionService.hasReminderAccess else {
@@ -198,7 +198,7 @@ public final class ReminderService {
         ekReminder.calendar = calendar
         ekReminder.title = title
         ekReminder.notes = notes
-        ekReminder.priority = priority
+        ekReminder.priority = priority.eventKitValue
 
         // Set due date if provided
         if let dueDate = dueDate {
@@ -237,7 +237,7 @@ public final class ReminderService {
         title: String? = nil,
         notes: String? = nil,
         dueDate: Date? = nil,
-        priority: Int? = nil,
+        priority: Priority? = nil,
         moveTo list: ReminderList? = nil
     ) async throws -> Reminder {
         guard permissionService.hasReminderAccess else {
@@ -270,7 +270,7 @@ public final class ReminderService {
 
         // Update priority if provided
         if let priority = priority {
-            ekReminder.priority = priority
+            ekReminder.priority = priority.eventKitValue
         }
 
         // Move to new list if provided
@@ -458,13 +458,8 @@ public final class ReminderService {
             }
 
         case .priority:
-            return reminders.sorted { lhs, rhs in
-                // Priority: 0 = none (lowest), 1-4 = high, 5 = medium, 6-9 = low
-                // We want high priority (lower numbers, but not 0) first
-                let lhsPriority = lhs.priority == 0 ? Int.max : lhs.priority
-                let rhsPriority = rhs.priority == 0 ? Int.max : rhs.priority
-                return lhsPriority < rhsPriority
-            }
+            // Priority enum is Comparable: high < medium < low < none
+            return reminders.sorted { $0.priority < $1.priority }
 
         case .creationDate(let ascending):
             return reminders.sorted { lhs, rhs in

@@ -36,8 +36,8 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     /// The due date for this reminder, if set.
     public let dueDate: Date?
 
-    /// The priority level of the reminder (0 = none, 1-4 = high, 5 = medium, 6-9 = low).
-    public let priority: Int
+    /// The priority level of the reminder.
+    public let priority: Priority
 
     /// Whether this reminder has been completed.
     public let isCompleted: Bool
@@ -130,7 +130,7 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.title = reminder.title ?? ""
         self.notes = reminder.notes
         self.dueDate = reminder.dueDateComponents?.date
-        self.priority = reminder.priority
+        self.priority = Priority(eventKitValue: reminder.priority)
         self.isCompleted = reminder.isCompleted
         self.creationDate = reminder.creationDate
         self.lastModifiedDate = reminder.lastModifiedDate
