@@ -48,6 +48,80 @@ public struct Event: Identifiable, Sendable, Hashable {
     /// The calendar this event belongs to.
     public let calendarID: String
 
+    /// The URL associated with the event, if specified.
+    public let url: URL?
+
+    // MARK: - Meeting Detection
+
+    /// Whether this event is a Microsoft Teams meeting.
+    ///
+    /// This property checks both the event's URL field and notes for Teams meeting links.
+    /// Recognised patterns include `teams.microsoft.com` and `teams.live.com`.
+    public var isTeamsMeeting: Bool {
+        // Check URL field
+        if let url = url, let host = url.host?.lowercased() {
+            if host.contains("teams.microsoft.com") || host.contains("teams.live.com") {
+                return true
+            }
+        }
+
+        // Check notes for embedded URLs
+        if let notes = notes {
+            let urls = extractURLs(from: notes)
+            if containsHost(urls, host: "teams.microsoft.com") || containsHost(urls, host: "teams.live.com") {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /// Whether this event is a Google Meet meeting.
+    ///
+    /// This property checks both the event's URL field and notes for Google Meet links.
+    /// Recognised pattern: `meet.google.com`.
+    public var isGoogleMeetMeeting: Bool {
+        // Check URL field
+        if let url = url, let host = url.host?.lowercased() {
+            if host.contains("meet.google.com") {
+                return true
+            }
+        }
+
+        // Check notes for embedded URLs
+        if let notes = notes {
+            let urls = extractURLs(from: notes)
+            if containsHost(urls, host: "meet.google.com") {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /// Whether this event is a Zoom meeting.
+    ///
+    /// This property checks both the event's URL field and notes for Zoom meeting links.
+    /// Recognised patterns include `zoom.us` and `zoomgov.com`.
+    public var isZoomMeeting: Bool {
+        // Check URL field
+        if let url = url, let host = url.host?.lowercased() {
+            if host.contains("zoom.us") || host.contains("zoomgov.com") {
+                return true
+            }
+        }
+
+        // Check notes for embedded URLs
+        if let notes = notes {
+            let urls = extractURLs(from: notes)
+            if containsHost(urls, host: "zoom.us") || containsHost(urls, host: "zoomgov.com") {
+                return true
+            }
+        }
+
+        return false
+    }
+
     // MARK: - Initialisation
 
     /// Creates an event from an EventKit event.
@@ -64,6 +138,7 @@ public struct Event: Identifiable, Sendable, Hashable {
         self.isAllDay = event.isAllDay
         self.location = event.location
         self.calendarID = event.calendar?.calendarIdentifier ?? ""
+        self.url = event.url
     }
 
     // MARK: - Hashable
@@ -74,5 +149,38 @@ public struct Event: Identifiable, Sendable, Hashable {
 
     public static func == (lhs: Event, rhs: Event) -> Bool {
         lhs.id == rhs.id
+    }
+
+    // MARK: - Private Helpers
+
+    /// Extracts URLs from a given text string.
+    ///
+    /// - Parameter text: The text to search for URLs.
+    /// - Returns: An array of URLs found in the text.
+    private func extractURLs(from text: String) -> [URL] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+
+        let matches = detector.matches(in: text, range: NSRange(text.startIndex..., in: text))
+        return matches.compactMap { match in
+            guard let range = Range(match.range, in: text),
+                  let url = URL(string: String(text[range])) else {
+                return nil
+            }
+            return url
+        }
+    }
+
+    /// Checks if any URL in the provided array contains the specified host.
+    ///
+    /// - Parameters:
+    ///   - urls: Array of URLs to check.
+    ///   - host: The host string to search for (case-insensitive).
+    /// - Returns: `true` if any URL contains the host, otherwise `false`.
+    private func containsHost(_ urls: [URL], host: String) -> Bool {
+        urls.contains { url in
+            url.host?.lowercased().contains(host.lowercased()) ?? false
+        }
     }
 }
