@@ -100,6 +100,7 @@ test: add unit tests for FoundationModels integration
 - Use imperative mood ("add" not "added" or "adds")
 - Add scope in parentheses when relevant: `feat(eventkit): add reminder support`
 - Include breaking changes with `BREAKING CHANGE:` in footer or `!` after type: `feat!: change service API`
+- **Do not mention** EUPL 1.2 licence headers or British English documentation adherence in commit messages (these are project standards and don't need to be stated in every commit)
 
 ## Code Architecture
 
