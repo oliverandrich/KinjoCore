@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - GitHub Actions workflow for automated testing on macOS with Xcode 26
+- Added justfile for convenient local testing with `just test`
 
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
