@@ -24,7 +24,7 @@ KinjoCore serves as the shared service layer for two personal macOS/iOS projects
 Add via Swift Package Manager:
 
 ```swift
-.package(url: "https://codeberg.org/oliverandrich/KinjoCore.git", from: "0.9.0")
+.package(url: "https://github.com/oliverandrich/KinjoCore.git", from: "0.9.0")
 ```
 
 ## Basic Usage

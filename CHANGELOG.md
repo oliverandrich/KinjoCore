@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
+
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README
 
@@ -51,5 +54,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commit message guidelines following Conventional Commits
 - EUPL 1.2 licence headers on all source files
 
-[unreleased]: https://codeberg.org/oliverandrich/KinjoCore/compare/v0.9.0...HEAD
-[0.9.0]: https://codeberg.org/oliverandrich/KinjoCore/releases/tag/v0.9.0
+[unreleased]: https://github.com/oliverandrich/KinjoCore/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/oliverandrich/KinjoCore/releases/tag/v0.9.0
