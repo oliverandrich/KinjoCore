@@ -200,5 +200,5 @@ try await reminderService.createReminder(
 - ``RecurrenceFrequency``
 - ``RecurrenceEnd``
 - ``RecurrenceDayOfWeek``
-- ``ReminderService/createReminder(title:notes:startDate:dueDate:priority:recurrenceRules:alarms:location:url:in:)``
-- ``ReminderService/updateReminder(_:title:notes:startDate:dueDate:priority:isCompleted:recurrenceRules:alarms:location:url:)``
+- ``ReminderService/createReminder(title:notes:startDate:dueDate:priority:recurrenceRules:alarms:location:in:)``
+- ``ReminderService/updateReminder(_:title:notes:startDate:dueDate:priority:recurrenceRules:alarms:location:moveTo:)``

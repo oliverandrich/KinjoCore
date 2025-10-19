@@ -34,7 +34,7 @@ build:
 clean:
     swift package clean
 
-# Generate documentation
+# Generate documentation for GitHub Pages
 docs:
     swift package \
         --allow-writing-to-directory ./docs \
@@ -44,6 +44,6 @@ docs:
         --transform-for-static-hosting \
         --hosting-base-path KinjoCore
 
-# Preview documentation in browser
-preview-docs: docs
-    open docs/documentation/kinjocore/index.html
+# Preview documentation with live reload (starts DocC preview server)
+preview-docs:
+    swift package --disable-sandbox preview-documentation --target KinjoCore

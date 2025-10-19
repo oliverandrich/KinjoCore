@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Getting Started guide for new users
   - Advanced guide for working with recurrence rules
 - GitHub Actions workflow for automatic documentation deployment to GitHub Pages
-- `just docs` and `just preview-docs` commands for local documentation generation
+- `just docs` command for generating documentation for GitHub Pages
+- `just preview-docs` command for local documentation preview with live reload server
 
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
@@ -25,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabled parallel testing for both macOS and iOS targets for improved reliability with EventKit
 - iOS test target now shuts down all simulators before each run to ensure clean state
 - Re-enabled iOS tests in GitHub Actions workflow with serial test execution and proper simulator management
+
+### Fixed
+- Corrected DocC documentation link warnings (function signatures in WorkingWithRecurrence.md)
+- Fixed parameter documentation mismatch in Priority.swift
 
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README

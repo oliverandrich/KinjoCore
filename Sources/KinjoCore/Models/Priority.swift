@@ -43,7 +43,7 @@ public enum Priority: Sendable, Hashable, Comparable {
 
     /// Creates a priority from an EventKit integer value.
     ///
-    /// - Parameter rawValue: The EventKit priority value (0-9).
+    /// - Parameter eventKitValue: The EventKit priority value (0-9).
     public init(eventKitValue: Int) {
         switch eventKitValue {
         case 0:
