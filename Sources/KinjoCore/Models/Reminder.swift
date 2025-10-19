@@ -33,7 +33,18 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     /// Optional notes associated with the reminder.
     public let notes: String?
 
+    /// The start date for this reminder, if set.
+    ///
+    /// Represents when work on this reminder is planned to begin.
+    /// When both `startDate` and `dueDate` are set, `startDate` indicates the planned start time
+    /// and `dueDate` indicates the deadline. Use `plannedDate` to get the effective planning date.
+    public let startDate: Date?
+
     /// The due date for this reminder, if set.
+    ///
+    /// Represents the deadline by which this reminder should be completed.
+    /// When only `dueDate` is set (without `startDate`), it serves as both the planned date
+    /// and the deadline. This matches the behaviour of Apple's Reminders app.
     public let dueDate: Date?
 
     /// The priority level of the reminder.
@@ -56,6 +67,25 @@ public struct Reminder: Identifiable, Sendable, Hashable {
 
     /// The URL associated with the reminder, if specified.
     public let url: URL?
+
+    /// The recurrence rules for this reminder.
+    ///
+    /// Contains one or more recurrence rules if the reminder repeats, or `nil`/empty array if it doesn't.
+    /// Multiple rules can be combined to create complex recurrence patterns.
+    public let recurrenceRules: [RecurrenceRule]?
+
+    /// The alarms configured for this reminder.
+    ///
+    /// Alarms trigger notifications at specific times or locations. A reminder can have
+    /// multiple alarms (e.g., one day before, one hour before, 15 minutes before).
+    public let alarms: [Alarm]?
+
+    /// The location associated with this reminder as a simple text string.
+    ///
+    /// This is a basic location descriptor like "Office", "Home", or "Supermarket".
+    /// For location-based triggers and geofencing, use location-based alarms instead
+    /// (via the `alarms` property with `.location` alarm type).
+    public let location: String?
 
     /// Tags extracted from the notes field.
     ///
@@ -94,6 +124,44 @@ public struct Reminder: Identifiable, Sendable, Hashable {
     public var hasNote: Bool {
         guard let notes = notes else { return false }
         return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// Whether this reminder has recurrence rules (repeats).
+    public var hasRecurrenceRules: Bool {
+        guard let rules = recurrenceRules else { return false }
+        return !rules.isEmpty
+    }
+
+    /// Whether this reminder has any alarms configured.
+    public var hasAlarms: Bool {
+        guard let alarms = alarms else { return false }
+        return !alarms.isEmpty
+    }
+
+    /// Whether this reminder has location information.
+    ///
+    /// Returns `true` if `location` is set and not empty.
+    public var hasLocation: Bool {
+        guard let location = location else { return false }
+        return !location.isEmpty
+    }
+
+    /// The effective planned date for this reminder.
+    ///
+    /// Returns `startDate` if set, otherwise falls back to `dueDate`.
+    /// Use this property when you want to know "when is this task planned for?"
+    /// regardless of whether it has a separate deadline.
+    public var plannedDate: Date? {
+        startDate ?? dueDate
+    }
+
+    /// Whether this reminder has both a start date and a due date.
+    ///
+    /// When `true`, `startDate` represents the planned start time and `dueDate` represents
+    /// the deadline. When `false`, only `dueDate` is set (or neither), and `dueDate` serves
+    /// as the single date reference.
+    public var hasDeadline: Bool {
+        startDate != nil && dueDate != nil
     }
 
     /// Whether this reminder contains a URL.
@@ -138,6 +206,7 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.id = reminder.calendarItemIdentifier
         self.title = reminder.title ?? ""
         self.notes = reminder.notes
+        self.startDate = reminder.startDateComponents?.date
         self.dueDate = reminder.dueDateComponents?.date
         self.priority = Priority(eventKitValue: reminder.priority)
         self.isCompleted = reminder.isCompleted
@@ -146,6 +215,23 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.completionDate = reminder.completionDate
         self.calendarID = reminder.calendar?.calendarIdentifier ?? ""
         self.url = reminder.url
+
+        // Convert recurrence rules
+        if let ekRules = reminder.recurrenceRules, !ekRules.isEmpty {
+            self.recurrenceRules = ekRules.map { RecurrenceRule(from: $0) }
+        } else {
+            self.recurrenceRules = nil
+        }
+
+        // Convert alarms
+        if let ekAlarms = reminder.alarms, !ekAlarms.isEmpty {
+            self.alarms = ekAlarms.compactMap { Alarm(from: $0) }
+        } else {
+            self.alarms = nil
+        }
+
+        // Convert location
+        self.location = reminder.location
     }
 
     // MARK: - Hashable

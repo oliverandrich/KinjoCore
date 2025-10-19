@@ -351,17 +351,31 @@ public final class ReminderService {
     /// - Parameters:
     ///   - title: The title of the reminder. Must not be empty.
     ///   - notes: Optional notes to attach to the reminder.
-    ///   - dueDate: Optional due date for the reminder.
+    ///   - startDate: Optional start date when work on this reminder is planned to begin.
+    ///   - dueDate: Optional due date (deadline) for the reminder.
     ///   - priority: The priority level. Defaults to `.none`.
+    ///   - recurrenceRules: Optional recurrence rules for repeating reminders.
+    ///   - alarms: Optional alarms that trigger notifications for this reminder.
+    ///   - location: Optional location as a simple text string (e.g., "Office", "Home").
     ///   - list: The reminder list to add the reminder to.
     /// - Returns: The newly created reminder.
     /// - Throws: An error if creation fails, if permissions are not granted, if the title is empty, or if the list is not found.
+    ///
+    /// - Note: When both `startDate` and `dueDate` are provided, `startDate` represents the planned start
+    ///   and `dueDate` represents the deadline. When only `dueDate` is provided, it serves as the primary date
+    ///   reference (compatible with Apple's Reminders app behaviour).
+    /// - Note: For location-based triggers with geofencing, use location-based alarms (`.location` alarm type)
+    ///   rather than the simple `location` parameter.
     @discardableResult
     public func createReminder(
         title: String,
         notes: String? = nil,
+        startDate: Date? = nil,
         dueDate: Date? = nil,
         priority: Priority = .none,
+        recurrenceRules: [RecurrenceRule]? = nil,
+        alarms: [Alarm]? = nil,
+        location: String? = nil,
         in list: ReminderList
     ) async throws -> Reminder {
         guard permissionService.hasReminderAccess else {
@@ -385,10 +399,31 @@ public final class ReminderService {
         ekReminder.notes = notes
         ekReminder.priority = priority.eventKitValue
 
+        // Set start date if provided
+        if let startDate = startDate {
+            let calendar = FoundationCalendar.current
+            ekReminder.startDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: startDate)
+        }
+
         // Set due date if provided
         if let dueDate = dueDate {
             let calendar = FoundationCalendar.current
             ekReminder.dueDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: dueDate)
+        }
+
+        // Set recurrence rules if provided
+        if let recurrenceRules = recurrenceRules, !recurrenceRules.isEmpty {
+            ekReminder.recurrenceRules = recurrenceRules.map { $0.toEKRecurrenceRule() }
+        }
+
+        // Set alarms if provided
+        if let alarms = alarms, !alarms.isEmpty {
+            ekReminder.alarms = alarms.map { $0.toEKAlarm() }
+        }
+
+        // Set location if provided
+        if let location = location {
+            ekReminder.location = location
         }
 
         // Save to EventKit
@@ -407,12 +442,18 @@ public final class ReminderService {
     /// This method requires that the app has permission to access reminders.
     /// Only the provided (non-nil) parameters will be updated; others remain unchanged.
     ///
+    /// **Note:** To clear recurrence rules, pass an empty array `[]`. To leave them unchanged, pass `nil`.
+    ///
     /// - Parameters:
     ///   - reminderId: The unique identifier of the reminder to update.
     ///   - title: Optional new title for the reminder.
     ///   - notes: Optional new notes for the reminder. Pass empty string to clear notes.
-    ///   - dueDate: Optional new due date for the reminder. Pass nil to clear the due date.
+    ///   - startDate: Optional new start date for the reminder.
+    ///   - dueDate: Optional new due date for the reminder.
     ///   - priority: Optional new priority level.
+    ///   - recurrenceRules: Optional new recurrence rules. Pass `[]` to clear, `nil` to leave unchanged.
+    ///   - alarms: Optional new alarms. Pass `[]` to clear, `nil` to leave unchanged.
+    ///   - location: Optional new location string.
     ///   - list: Optional new reminder list to move the reminder to.
     /// - Returns: The updated reminder.
     /// - Throws: An error if updating fails, if permissions are not granted, if the reminder is not found, or if the new list is not found.
@@ -421,8 +462,12 @@ public final class ReminderService {
         _ reminderId: String,
         title: String? = nil,
         notes: String? = nil,
+        startDate: Date? = nil,
         dueDate: Date? = nil,
         priority: Priority? = nil,
+        recurrenceRules: [RecurrenceRule]? = nil,
+        alarms: [Alarm]? = nil,
+        location: String? = nil,
         moveTo list: ReminderList? = nil
     ) async throws -> Reminder {
         guard permissionService.hasReminderAccess else {
@@ -447,6 +492,12 @@ public final class ReminderService {
             ekReminder.notes = notes.isEmpty ? nil : notes
         }
 
+        // Update start date if provided
+        if let startDate = startDate {
+            let calendar = FoundationCalendar.current
+            ekReminder.startDateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: startDate)
+        }
+
         // Update due date if provided
         if let dueDate = dueDate {
             let calendar = FoundationCalendar.current
@@ -456,6 +507,34 @@ public final class ReminderService {
         // Update priority if provided
         if let priority = priority {
             ekReminder.priority = priority.eventKitValue
+        }
+
+        // Update recurrence rules if provided
+        // Note: We need to distinguish between nil (don't change) and [] (clear rules)
+        // We use a marker approach: check if the parameter was explicitly passed
+        if recurrenceRules != nil {
+            if let rules = recurrenceRules, !rules.isEmpty {
+                ekReminder.recurrenceRules = rules.map { $0.toEKRecurrenceRule() }
+            } else {
+                // Empty array means clear the rules
+                ekReminder.recurrenceRules = nil
+            }
+        }
+
+        // Update alarms if provided
+        // Same logic as recurrence rules: nil = don't change, [] = clear
+        if alarms != nil {
+            if let alarms = alarms, !alarms.isEmpty {
+                ekReminder.alarms = alarms.map { $0.toEKAlarm() }
+            } else {
+                // Empty array means clear the alarms
+                ekReminder.alarms = nil
+            }
+        }
+
+        // Update location if provided
+        if let location = location {
+            ekReminder.location = location.isEmpty ? nil : location
         }
 
         // Move to new list if provided

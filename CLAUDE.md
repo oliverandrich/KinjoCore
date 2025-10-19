@@ -163,8 +163,10 @@ The project requires Swift 6.2 or higher (`swift-tools-version: 6.2` in Package.
 ## Core Technologies & Frameworks
 
 ### EventKit
-- **Primary data storage and synchronization technology**
-- Uses EventKit for task management and synchronization
+- **Primary data storage and synchronisation technology**
+- Uses EventKit for task management and synchronisation
+- **Full recurrence rule support** for repeating reminders (EKRecurrenceRule)
+- Supports complex recurrence patterns including positional rules (e.g., "first Monday", "last Friday")
 - Only use APIs available in iOS 26+ and macOS 26+ versions of EventKit
 - No need to handle deprecated or legacy EventKit APIs
 
