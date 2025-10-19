@@ -9,6 +9,10 @@ test-macos:
 
 # Run tests on iOS Simulator
 test-ios:
+    #!/usr/bin/env bash
+    # Boot simulator first
+    xcrun simctl boot "iPhone 17" 2>/dev/null || true
+    sleep 2
     xcodebuild test \
         -scheme KinjoCore \
         -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0'
