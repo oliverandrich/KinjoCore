@@ -105,6 +105,57 @@ test: add unit tests for FoundationModels integration
 - **Keep commit messages compact**: Be informative but concise. Avoid overly verbose bodies - focus on key changes and rationale, not exhaustive implementation details
 - **Do not include test counts or results** in commit messages (e.g., "17 tests passing", "69 tests total") - tests are verified by CI and the counts change frequently
 
+### Changelog Management
+
+This project maintains a changelog following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format in `CHANGELOG.md`.
+
+**When to update the changelog:**
+
+For **every commit** that affects functionality or user experience, you **must** update the `CHANGELOG.md` file under the `[Unreleased]` section before committing. This ensures the changelog stays current and release preparation is simplified.
+
+**Mapping Conventional Commit types to Changelog categories:**
+
+- `feat:` → **Added** - New features or capabilities
+- `fix:` → **Fixed** - Bug fixes
+- `refactor:` → **Changed** - Refactorings that change behaviour
+- `perf:` → **Changed** - Performance improvements
+- `BREAKING CHANGE` → **Changed** (with clear indication it's breaking)
+- `deprecate:` or deprecation notices → **Deprecated**
+- Removal of deprecated features → **Removed**
+- Security-related fixes → **Security**
+
+**Do NOT add changelog entries for:**
+- `docs:` - Documentation changes (unless they describe a new user-facing feature)
+- `test:` - Test additions or modifications
+- `style:` - Code style changes
+- `chore:` - Maintenance tasks, dependency updates
+- `build:` - Build system changes
+- `ci:` - CI/CD configuration changes
+
+**Format for changelog entries:**
+
+Each entry should be a concise bullet point describing the change from a user's perspective:
+
+```markdown
+## [Unreleased]
+
+### Added
+- New feature X that allows users to do Y
+
+### Fixed
+- Issue where Z would fail under condition W
+
+### Changed
+- Service X now uses approach Y for better performance
+```
+
+**Before creating a release:**
+
+1. Change `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD`
+2. Add a new empty `[Unreleased]` section at the top
+3. Update the comparison links at the bottom of the file
+4. Create a git tag for the release
+
 ## Code Architecture
 
 ### Package Structure
