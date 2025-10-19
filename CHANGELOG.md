@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- GitHub Actions workflow for automated testing on macOS and iOS with Xcode 16
+- GitHub Actions workflow for automated testing on macOS and iOS with Xcode 26
 
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
+- GitHub Actions now uses macOS 26 runner with iOS 26 and macOS 26 SDKs
 
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README

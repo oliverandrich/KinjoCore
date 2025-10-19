@@ -9,7 +9,7 @@ on:
 jobs:
   test-macos:
     name: Test on macOS
-    runs-on: macos-14
+    runs-on: macos-26
 
     steps:
       - name: Checkout code
@@ -28,7 +28,7 @@ jobs:
 
   test-ios:
     name: Test on iOS Simulator
-    runs-on: macos-14
+    runs-on: macos-26
 
     steps:
       - name: Checkout code
@@ -43,4 +43,4 @@ jobs:
         run: |
           xcodebuild test \
             -scheme KinjoCore \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.0'
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.0'
