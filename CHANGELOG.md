@@ -14,10 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
 - GitHub Actions now uses macOS 26 runner with macOS 26 SDK
-- GitHub Actions workflow now only tests on macOS (iOS tests run locally due to XPC limitations)
 - iOS test target in justfile now boots simulator automatically before running tests
 - Disabled parallel testing for both macOS and iOS targets for improved reliability with EventKit
 - iOS test target now shuts down all simulators before each run to ensure clean state
+- Re-enabled iOS tests in GitHub Actions workflow with serial test execution and proper simulator management
 
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README
