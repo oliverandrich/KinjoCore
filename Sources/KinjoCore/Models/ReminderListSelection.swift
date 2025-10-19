@@ -16,6 +16,24 @@
 import Foundation
 
 /// Selection options for which reminder lists to fetch reminders from.
+///
+/// ## Examples
+///
+/// ```swift
+/// // Fetch from all reminder lists
+/// let allReminders = try await reminderService.fetchReminders(
+///     from: .all,
+///     filter: .incomplete
+/// )
+///
+/// // Fetch from specific reminder lists only
+/// let workList = reminderLists.first { $0.title == "Work" }
+/// let shoppingList = reminderLists.first { $0.title == "Shopping" }
+/// let selectedReminders = try await reminderService.fetchReminders(
+///     from: .specific([workList, shoppingList].compactMap { $0 }),
+///     filter: .all
+/// )
+/// ```
 public enum ReminderListSelection: Sendable, Hashable {
 
     /// Fetch reminders from all available reminder lists.

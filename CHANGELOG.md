@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - GitHub Actions workflow for automated testing on macOS with Xcode 26
 - Added justfile for convenient local testing with `just test`
+- Swift-DocC-Plugin integration for generating API documentation
+- DocC catalog with comprehensive documentation structure:
+  - Landing page with Topics organisation
+  - Getting Started guide for new users
+  - Advanced guide for working with recurrence rules
+- GitHub Actions workflow for automatic documentation deployment to GitHub Pages
+- `just docs` and `just preview-docs` commands for local documentation generation
 
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
@@ -22,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README
 - Added GitHub Actions test status badge to README
+- Enhanced code comments with examples for CalendarSelection and ReminderListSelection
+- Added comprehensive Topics organisation to DocC landing page
 
 ## [0.9.0] - 2025-10-19
 

@@ -16,6 +16,24 @@
 import Foundation
 
 /// Selection options for which calendars to fetch events from.
+///
+/// ## Examples
+///
+/// ```swift
+/// // Fetch from all calendars
+/// let allEvents = try await calendarService.fetchEvents(
+///     from: .all,
+///     range: .thisWeek
+/// )
+///
+/// // Fetch from specific calendars only
+/// let workCalendar = calendars.first { $0.title == "Work" }
+/// let personalCalendar = calendars.first { $0.title == "Personal" }
+/// let selectedEvents = try await calendarService.fetchEvents(
+///     from: .specific([workCalendar, personalCalendar].compactMap { $0 }),
+///     range: .thisMonth
+/// )
+/// ```
 public enum CalendarSelection: Sendable, Hashable {
 
     /// Fetch events from all available calendars.

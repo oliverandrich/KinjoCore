@@ -33,3 +33,17 @@ build:
 # Clean build artifacts
 clean:
     swift package clean
+
+# Generate documentation
+docs:
+    swift package \
+        --allow-writing-to-directory ./docs \
+        generate-documentation \
+        --target KinjoCore \
+        --output-path ./docs \
+        --transform-for-static-hosting \
+        --hosting-base-path KinjoCore
+
+# Preview documentation in browser
+preview-docs: docs
+    open docs/documentation/kinjocore/index.html
