@@ -6,6 +6,7 @@ A Swift service layer for working with EventKit in macOS and iOS applications. T
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%2026%20%7C%20macOS%2026-lightgrey.svg)](https://developer.apple.com)
 [![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager)
 [![License](https://img.shields.io/badge/license-EUPL%201.2-blue.svg)](https://joinup.ec.europa.eu/software/page/eupl)
+[![Tests](https://github.com/oliverandrich/KinjoCore/workflows/Tests/badge.svg)](https://github.com/oliverandrich/KinjoCore/actions)
 
 ## Purpose
 

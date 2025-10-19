@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - Added Swift version, platform, and SPM compatibility badges to README
+- Added GitHub Actions test status badge to README
 
 ## [0.9.0] - 2025-10-19
 
