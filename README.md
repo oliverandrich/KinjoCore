@@ -2,6 +2,9 @@
 
 A Swift service layer for working with EventKit in macOS and iOS applications. This library provides a structured way to interact with reminders and calendar events, designed for specific project requirements.
 
+[![Swift](https://img.shields.io/badge/Swift-6.2+-orange.svg)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%2026%20%7C%20macOS%2026-lightgrey.svg)](https://developer.apple.com)
+[![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)](https://swift.org/package-manager)
 [![License](https://img.shields.io/badge/license-EUPL%201.2-blue.svg)](https://joinup.ec.europa.eu/software/page/eupl)
 
 ## Purpose
@@ -21,7 +24,7 @@ KinjoCore serves as the shared service layer for two personal macOS/iOS projects
 Add via Swift Package Manager:
 
 ```swift
-.package(url: "https://github.com/yourusername/KinjoCore.git", from: "1.0.0")
+.package(url: "https://codeberg.org/oliverandrich/KinjoCore.git", from: "0.9.0")
 ```
 
 ## Basic Usage
