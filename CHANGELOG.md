@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabled parallel testing for both macOS and iOS targets for improved reliability with EventKit
 - iOS test target now shuts down all simulators before each run to ensure clean state
 - Re-enabled iOS tests in GitHub Actions workflow with serial test execution and proper simulator management
+- GitHub Pages root URL now automatically redirects to documentation landing page
 
 ### Fixed
 - Corrected DocC documentation link warnings (function signatures in WorkingWithRecurrence.md)
