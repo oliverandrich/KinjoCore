@@ -5,17 +5,26 @@ test: test-macos test-ios
 test-macos:
     xcodebuild test \
         -scheme KinjoCore \
-        -destination 'platform=macOS'
+        -destination 'platform=macOS' \
+        -parallel-testing-enabled NO
 
 # Run tests on iOS Simulator
 test-ios:
     #!/usr/bin/env bash
-    # Boot simulator first
+    # Shutdown all simulators to ensure clean state
+    xcrun simctl shutdown all 2>/dev/null || true
+    sleep 1
+    # Boot simulator
     xcrun simctl boot "iPhone 17" 2>/dev/null || true
-    sleep 2
+    sleep 3
     xcodebuild test \
         -scheme KinjoCore \
-        -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0'
+        -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0' \
+        -enableCodeCoverage NO \
+        -parallel-testing-enabled NO \
+        2>&1 | tee /tmp/xcodebuild-ios.log
+    # Shutdown after tests
+    xcrun simctl shutdown "iPhone 17" 2>/dev/null || true
 
 # Build the package
 build:
