@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-macos:
+    name: Test on macOS
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests on macOS
+        run: |
+          xcodebuild test \
+            -scheme KinjoCore \
+            -destination 'platform=macOS'
+
+  test-ios:
+    name: Test on iOS Simulator
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests on iOS Simulator
+        run: |
+          xcodebuild test \
+            -scheme KinjoCore \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0'

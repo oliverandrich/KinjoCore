@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- GitHub Actions workflow for automated testing on macOS and iOS
+
 ### Changed
 - Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
 
