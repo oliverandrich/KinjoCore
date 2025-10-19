@@ -48,7 +48,8 @@ struct ReminderAlarmTests {
         #expect(reminder.alarms?.count == 1)
 
         if case .absolute(let date) = reminder.alarms?.first {
-            #expect(date == alarmDate)
+            // Compare with tolerance for sub-second precision differences
+            #expect(abs(date.timeIntervalSince(alarmDate)) < 1.0)
         } else {
             Issue.record("Expected absolute alarm")
         }
@@ -365,7 +366,7 @@ struct ReminderAlarmTests {
 
         let office = StructuredLocation.named("Office")
 
-        let reminder = try await reminderService.createReminder(
+        let createdReminder = try await reminderService.createReminder(
             title: "Task at office",
             alarms: [
                 .relative(minutes: -15),
@@ -375,12 +376,19 @@ struct ReminderAlarmTests {
             in: firstList
         )
 
+        // Fetch the reminder again to ensure all properties are persisted
+        _ = try await reminderService.fetchReminders(from: .all, filter: .all)
+        guard let reminder = reminderService.reminders.first(where: { $0.id == createdReminder.id }) else {
+            Issue.record("Could not fetch created reminder")
+            return
+        }
+
         #expect(reminder.hasAlarms == true)
         #expect(reminder.alarms?.count == 2)
         #expect(reminder.hasLocation == true)
         #expect(reminder.location == "Office")
 
-        // Clean up
-        try await reminderService.deleteReminder(reminder)
+        // Clean up - use try? to prevent test crashes
+        try? await reminderService.deleteReminder(reminder)
     }
 }

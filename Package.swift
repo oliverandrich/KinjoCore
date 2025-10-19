@@ -6,14 +6,18 @@ import PackageDescription
 let package = Package(
     name: "KinjoCore",
     platforms: [
-        .iOS(.v18),
-        .macOS(.v15)
+        .iOS("26.0"),
+        .macOS("26.0")
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "KinjoCore",
             targets: ["KinjoCore"]
+        ),
+        .executable(
+            name: "parse-task",
+            targets: ["ParseTaskTool"]
         ),
     ],
     dependencies: [
@@ -27,6 +31,11 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("EventKit")
             ]
+        ),
+        .executableTarget(
+            name: "ParseTaskTool",
+            dependencies: ["KinjoCore"],
+            exclude: ["README.md"]
         ),
         .testTarget(
             name: "KinjoCoreTests",

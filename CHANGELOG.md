@@ -7,36 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-10-19
+
 ### Added
-- GitHub Actions workflow for automated testing on macOS with Xcode 26
-- Added justfile for convenient local testing with `just test`
-- Swift-DocC-Plugin integration for generating API documentation
-- DocC catalog with comprehensive documentation structure:
-  - Landing page with Topics organisation
-  - Getting Started guide for new users
+- Deterministic task parser (`TaskParser`) with multi-language support (German, English, French, Spanish)
+  - Natural language parsing for dates, times, deadlines, and recurring patterns
+  - Support for priorities, projects (@tags), and labels (#tags)
+  - Semantic distinction between scheduled date (when to work) and deadline (when it must be done)
+  - Complex recurrence patterns including positional rules (e.g., "first Monday", "last Friday")
+  - `ParsedTask` model with annotations for UI highlighting of parsed elements
+  - Command-line tool `parse-task` for testing the parser
+- Swift-DocC documentation with comprehensive guides:
+  - Getting Started guide
   - Advanced guide for working with recurrence rules
-- GitHub Actions workflow for automatic documentation deployment to GitHub Pages
-- `just docs` command for generating documentation for GitHub Pages
-- `just preview-docs` command for local documentation preview with live reload server
+  - API reference with full DocC coverage
+  - Automatic deployment to GitHub Pages
+- `justfile` commands for development:
+  - `just test` - Run all tests (macOS and iOS)
+  - `just docs` - Generate static documentation
+  - `just preview-docs` - Local documentation preview with live reload
 
 ### Changed
-- Migrated repository from Codeberg to GitHub for CI/CD support with macOS runners
-- GitHub Actions now uses macOS 26 runner with macOS 26 SDK
-- iOS test target in justfile now boots simulator automatically before running tests
-- Disabled parallel testing for both macOS and iOS targets for improved reliability with EventKit
-- iOS test target now shuts down all simulators before each run to ensure clean state
-- Re-enabled iOS tests in GitHub Actions workflow with serial test execution and proper simulator management
-- GitHub Pages root URL now automatically redirects to documentation landing page
+- Test infrastructure now uses `xcodebuild test` instead of `swift test` for better EventKit compatibility
+- Tests run with proper simulator management and serial execution for reliability
 
 ### Fixed
-- Corrected DocC documentation link warnings (function signatures in WorkingWithRecurrence.md)
-- Fixed parameter documentation mismatch in Priority.swift
-
-### Documentation
-- Added Swift version, platform, and SPM compatibility badges to README
-- Added GitHub Actions test status badge to README
-- Enhanced code comments with examples for CalendarSelection and ReminderListSelection
-- Added comprehensive Topics organisation to DocC landing page
+- Documentation link warnings in DocC
+- Parameter documentation mismatches
 
 ## [0.9.0] - 2025-10-19
 
@@ -79,5 +76,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commit message guidelines following Conventional Commits
 - EUPL 1.2 licence headers on all source files
 
-[unreleased]: https://github.com/oliverandrich/KinjoCore/compare/v0.9.0...HEAD
+[unreleased]: https://github.com/oliverandrich/KinjoCore/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/oliverandrich/KinjoCore/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/oliverandrich/KinjoCore/releases/tag/v0.9.0

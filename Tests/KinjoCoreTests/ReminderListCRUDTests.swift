@@ -32,6 +32,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Create a new reminder list
         let list = try await reminderService.createReminderList(
             title: "Test List \(UUID().uuidString)"
@@ -52,6 +57,11 @@ struct ReminderListCRUDTests {
         let reminderService = ReminderService(permissionService: permissionService)
 
         guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
             return
         }
 
@@ -77,6 +87,11 @@ struct ReminderListCRUDTests {
         let reminderService = ReminderService(permissionService: permissionService)
 
         guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
             return
         }
 
@@ -116,6 +131,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Create a list
         let list = try await reminderService.createReminderList(
             title: "Original Title \(UUID().uuidString)"
@@ -146,6 +166,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Create a list
         let list = try await reminderService.createReminderList(
             title: "Colour Test \(UUID().uuidString)"
@@ -172,6 +197,11 @@ struct ReminderListCRUDTests {
         let reminderService = ReminderService(permissionService: permissionService)
 
         guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
             return
         }
 
@@ -205,6 +235,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Create a list
         let list = try await reminderService.createReminderList(
             title: "Valid Title \(UUID().uuidString)"
@@ -229,6 +264,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Attempt to update a list that doesn't exist
         await #expect(throws: ReminderServiceError.listNotFound) {
             try await reminderService.updateReminderList(
@@ -247,6 +287,11 @@ struct ReminderListCRUDTests {
         let reminderService = ReminderService(permissionService: permissionService)
 
         guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
             return
         }
 
@@ -273,6 +318,11 @@ struct ReminderListCRUDTests {
             return
         }
 
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
+            return
+        }
+
         // Create a list
         let list = try await reminderService.createReminderList(
             title: "To Delete Object \(UUID().uuidString)"
@@ -293,6 +343,11 @@ struct ReminderListCRUDTests {
         let reminderService = ReminderService(permissionService: permissionService)
 
         guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        // Skip if no EventKit source is available (e.g., no iCloud account configured)
+        guard !permissionService.eventStore.sources.isEmpty else {
             return
         }
 

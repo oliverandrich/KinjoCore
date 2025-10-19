@@ -4,9 +4,9 @@ test: test-macos test-ios
 # Run tests on macOS
 test-macos:
     xcodebuild test \
-        -scheme KinjoCore \
+        -scheme KinjoCore-Package \
         -destination 'platform=macOS' \
-        -parallel-testing-enabled NO
+        -enableCodeCoverage NO
 
 # Run tests on iOS Simulator
 test-ios:
@@ -18,7 +18,7 @@ test-ios:
     xcrun simctl boot "iPhone 17" 2>/dev/null || true
     sleep 3
     xcodebuild test \
-        -scheme KinjoCore \
+        -scheme KinjoCore-Package \
         -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0' \
         -enableCodeCoverage NO \
         -parallel-testing-enabled NO \

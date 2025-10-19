@@ -23,6 +23,7 @@
 /// - ``PermissionService``: Manages EventKit permissions and provides access to the event store
 /// - ``ReminderService``: Handles reminder lists and reminder operations
 /// - ``CalendarService``: Handles calendars and event operations
+/// - ``TaskParser``: Parses natural language input into structured task data
 ///
 /// ## Getting Started
 ///
@@ -34,6 +35,7 @@
 ///     private let permissionService = PermissionService()
 ///     private let reminderService: ReminderService
 ///     private let calendarService: CalendarService
+///     private let taskParser = TaskParser(config: .german)
 ///
 ///     init() {
 ///         self.reminderService = ReminderService(permissionService: permissionService)
@@ -46,7 +48,28 @@
 ///                 .environment(permissionService)
 ///                 .environment(reminderService)
 ///                 .environment(calendarService)
+///                 .environment(taskParser)
 ///         }
 ///     }
+/// }
+/// ```
+///
+/// ## Natural Language Parsing
+///
+/// Use the ``TaskParser`` to parse natural language input:
+///
+/// ```swift
+/// let parser = TaskParser(config: .german)
+/// let task = parser.parse("Jeden Freitag um 17 Uhr Softfolio eintragen @Arbeit p1")
+///
+/// // Access parsed values
+/// print(task.title)          // "Softfolio eintragen"
+/// print(task.priority)       // 1
+/// print(task.project)        // "Arbeit"
+/// print(task.recurring)      // Every Friday
+///
+/// // Use annotations for UI highlighting
+/// for annotation in task.annotations {
+///     highlightText(annotation.text, as: annotation.type)
 /// }
 /// ```

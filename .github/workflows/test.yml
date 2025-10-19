@@ -23,9 +23,9 @@ jobs:
       - name: Run tests on macOS
         run: |
           xcodebuild test \
-            -scheme KinjoCore \
+            -scheme KinjoCore-Package \
             -destination 'platform=macOS' \
-            -parallel-testing-enabled NO
+            -enableCodeCoverage NO
 
   test-ios:
     name: Test on iOS Simulator
@@ -50,7 +50,7 @@ jobs:
           sleep 3
           # Run tests
           xcodebuild test \
-            -scheme KinjoCore \
+            -scheme KinjoCore-Package \
             -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0' \
             -parallel-testing-enabled NO \
             -enableCodeCoverage NO
