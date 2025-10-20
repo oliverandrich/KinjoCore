@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2025-10-20
+
 ### Added
 
 - SmartFilterService now supports in-memory storage mode for testing via `isInMemory` parameter
@@ -16,13 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TaskParser now correctly handles time parsing across different timezones by extracting time components in system timezone and setting the calendar's timezone
 - SmartFilter tests now use in-memory storage to eliminate CoreData warnings in CI environments
 
+## [0.11.0] - 2025-10-20
+
 ### Documentation
 
 - Added comprehensive guide "Working with the Task Parser" covering natural language parsing
 - Added comprehensive guide "Working with Filters and SmartFilters" covering the filter system
 - Updated main documentation to reference new guides
-
-## [0.11.0] - 2025-10-20
 
 ### Added
 - Protocol-based service architecture for improved testability
