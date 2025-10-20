@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- GitHub Actions CI now runs only macOS tests to conserve CI minutes; iOS tests remain available locally via `just test-ios`
+
 ### Removed
 
 - Removed unused Scripts directory containing development debug tools

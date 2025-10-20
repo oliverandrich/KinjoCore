@@ -41,8 +41,9 @@ just clean              # Clean build artifacts
 
 ### Testing Strategy
 - **During development**: Use `just test-macos` for quick feedback
-- **Before commits/PRs**: Use `just test` to run tests on both platforms
-- Tests on both platforms are important as EventKit behaviour can differ between iOS and macOS
+- **Continuous Integration**: GitHub Actions runs `just test-macos` only to conserve CI minutes
+- **Before major releases**: Run `just test` locally to verify both macOS and iOS platforms
+- Note: EventKit behaviour can differ between iOS and macOS, so cross-platform testing is important for releases
 
 ### Direct Swift Commands (alternative to just)
 If you need to use Swift Package Manager commands directly:
