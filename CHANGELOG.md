@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-10-20
+
 ### Added
 - Protocol-based service architecture for improved testability
   - `PermissionServiceProtocol`, `ReminderServiceProtocol`, and `CalendarServiceProtocol`
@@ -120,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commit message guidelines following Conventional Commits
 - EUPL 1.2 licence headers on all source files
 
-[unreleased]: https://github.com/oliverandrich/KinjoCore/compare/v0.10.0...HEAD
+[unreleased]: https://github.com/oliverandrich/KinjoCore/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/oliverandrich/KinjoCore/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/oliverandrich/KinjoCore/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/oliverandrich/KinjoCore/releases/tag/v0.9.0
