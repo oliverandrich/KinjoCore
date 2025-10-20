@@ -8,6 +8,8 @@ KinjoCore provides a clean, Swift-native API for integrating with EventKit on iO
 
 ### Key Features
 
+- **Natural Language Parsing**: Multi-language task parser supporting German, English, French, and Spanish
+- **SmartFilter System**: Create and persist custom filter views with iCloud sync
 - **Reminder Management**: Create, read, update, and delete reminders with full CRUD operations
 - **Calendar Integration**: Access and manage calendars and events
 - **Rich Recurrence Support**: Complex repeating patterns with positional rules (e.g., "first Monday", "last Friday")
@@ -21,6 +23,8 @@ KinjoCore provides a clean, Swift-native API for integrating with EventKit on iO
 ### Getting Started
 
 - <doc:GettingStarted>
+- <doc:WorkingWithTaskParser>
+- <doc:WorkingWithFilters>
 - <doc:WorkingWithRecurrence>
 
 ### Core Services
@@ -28,6 +32,14 @@ KinjoCore provides a clean, Swift-native API for integrating with EventKit on iO
 - ``PermissionService``
 - ``ReminderService``
 - ``CalendarService``
+- ``SmartFilterService``
+
+### Task Parsing
+
+- ``TaskParser``
+- ``ParsedTask``
+- ``ParserConfig``
+- ``Annotation``
 
 ### Reminder Models
 
@@ -37,6 +49,12 @@ KinjoCore provides a clean, Swift-native API for integrating with EventKit on iO
 - ``ReminderListSelection``
 - ``ReminderSortOption``
 - ``TagFilter``
+- ``TextSearchFilter``
+
+### SmartFilter System
+
+- ``SmartFilter``
+- ``FilterCriteria``
 
 ### Calendar Models
 

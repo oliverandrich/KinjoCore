@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- Added comprehensive guide "Working with the Task Parser" covering natural language parsing
+- Added comprehensive guide "Working with Filters and SmartFilters" covering the filter system
+- Updated main documentation to reference new guides
+
 ## [0.11.0] - 2025-10-20
 
 ### Added
