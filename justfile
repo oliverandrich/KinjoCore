@@ -6,7 +6,9 @@ test-macos:
     xcodebuild test \
         -scheme KinjoCore-Package \
         -destination 'platform=macOS' \
-        -enableCodeCoverage NO
+        -parallel-testing-enabled NO \
+        -enableCodeCoverage NO \
+        | xcbeautify
 
 # Run tests on iOS Simulator
 test-ios:
@@ -22,7 +24,7 @@ test-ios:
         -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0' \
         -enableCodeCoverage NO \
         -parallel-testing-enabled NO \
-        2>&1 | tee /tmp/xcodebuild-ios.log
+        2>&1 | grep -v "CoreData:" | grep -v "appintentsmetadataprocessor" | xcbeautify
     # Shutdown after tests
     xcrun simctl shutdown "iPhone 17" 2>/dev/null || true
 

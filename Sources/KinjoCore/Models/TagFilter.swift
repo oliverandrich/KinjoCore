@@ -19,7 +19,7 @@ import Foundation
 ///
 /// Tags are extracted from the reminder's notes field (e.g., #work, #important).
 /// All tag comparisons are case-insensitive.
-public enum TagFilter: Sendable, Hashable {
+public enum TagFilter: Sendable, Hashable, Codable {
 
     /// No tag filtering applied.
     case none
@@ -29,20 +29,34 @@ public enum TagFilter: Sendable, Hashable {
     /// - Parameter tag: The tag to match (without # prefix, case-insensitive).
     case hasTag(String)
 
+    /// Filter reminders that do NOT have a specific tag.
+    ///
+    /// - Parameter tag: The tag to exclude (without # prefix, case-insensitive).
+    case notHasTag(String)
+
     /// Filter reminders that have at least one of the specified tags (OR logic).
     ///
     /// - Parameter tags: The tags to match (without # prefix, case-insensitive).
     case hasAnyTag([String])
+
+    /// Filter reminders that do NOT have any of the specified tags (NOT logic).
+    ///
+    /// This is the inverse of `hasAnyTag`: excludes reminders that have at least one of the specified tags.
+    ///
+    /// - Parameter tags: The tags to exclude (without # prefix, case-insensitive).
+    case notHasAnyTag([String])
 
     /// Filter reminders that have all of the specified tags (AND logic).
     ///
     /// - Parameter tags: The tags that must all be present (without # prefix, case-insensitive).
     case hasAllTags([String])
 
-    /// Filter reminders that do NOT have any of the specified tags (NOT logic).
+    /// Filter reminders that do NOT have all of the specified tags.
     ///
-    /// - Parameter tags: The tags to exclude (without # prefix, case-insensitive).
-    case excludingTags([String])
+    /// This is the inverse of `hasAllTags`: includes reminders that are missing at least one of the specified tags.
+    ///
+    /// - Parameter tags: The tags (without # prefix, case-insensitive).
+    case notHasAllTags([String])
 
     // MARK: - Hashable
 
@@ -53,14 +67,20 @@ public enum TagFilter: Sendable, Hashable {
         case .hasTag(let tag):
             hasher.combine(1)
             hasher.combine(tag.lowercased())
-        case .hasAnyTag(let tags):
+        case .notHasTag(let tag):
             hasher.combine(2)
-            hasher.combine(tags.map { $0.lowercased() }.sorted())
-        case .hasAllTags(let tags):
+            hasher.combine(tag.lowercased())
+        case .hasAnyTag(let tags):
             hasher.combine(3)
             hasher.combine(tags.map { $0.lowercased() }.sorted())
-        case .excludingTags(let tags):
+        case .notHasAnyTag(let tags):
             hasher.combine(4)
+            hasher.combine(tags.map { $0.lowercased() }.sorted())
+        case .hasAllTags(let tags):
+            hasher.combine(5)
+            hasher.combine(tags.map { $0.lowercased() }.sorted())
+        case .notHasAllTags(let tags):
+            hasher.combine(6)
             hasher.combine(tags.map { $0.lowercased() }.sorted())
         }
     }
@@ -71,11 +91,15 @@ public enum TagFilter: Sendable, Hashable {
             return true
         case (.hasTag(let lhsTag), .hasTag(let rhsTag)):
             return lhsTag.lowercased() == rhsTag.lowercased()
+        case (.notHasTag(let lhsTag), .notHasTag(let rhsTag)):
+            return lhsTag.lowercased() == rhsTag.lowercased()
         case (.hasAnyTag(let lhsTags), .hasAnyTag(let rhsTags)):
+            return Set(lhsTags.map { $0.lowercased() }) == Set(rhsTags.map { $0.lowercased() })
+        case (.notHasAnyTag(let lhsTags), .notHasAnyTag(let rhsTags)):
             return Set(lhsTags.map { $0.lowercased() }) == Set(rhsTags.map { $0.lowercased() })
         case (.hasAllTags(let lhsTags), .hasAllTags(let rhsTags)):
             return Set(lhsTags.map { $0.lowercased() }) == Set(rhsTags.map { $0.lowercased() })
-        case (.excludingTags(let lhsTags), .excludingTags(let rhsTags)):
+        case (.notHasAllTags(let lhsTags), .notHasAllTags(let rhsTags)):
             return Set(lhsTags.map { $0.lowercased() }) == Set(rhsTags.map { $0.lowercased() })
         default:
             return false

@@ -56,6 +56,26 @@ public struct ReminderList: Identifiable, Sendable, Hashable {
         self.isImmutable = !calendar.allowsContentModifications
     }
 
+    /// Internal initialiser for testing purposes.
+    ///
+    /// This initialiser allows creating a ReminderList directly without requiring EventKit.
+    /// It is intended for use in tests only.
+    internal init(
+        id: String,
+        title: String,
+        colour: CGColor,
+        sourceName: String,
+        sourceID: String,
+        isImmutable: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.colour = colour
+        self.sourceName = sourceName
+        self.sourceID = sourceID
+        self.isImmutable = isImmutable
+    }
+
     // MARK: - Hashable
 
     public func hash(into hasher: inout Hasher) {

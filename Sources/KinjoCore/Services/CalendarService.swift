@@ -8,7 +8,7 @@
 // https://joinup.ec.europa.eu/software/page/eupl
 //
 // Unless required by applicable law or agreed to in writing, software
-// distributed under the Licence is distributed on an "AS IS" basis,
+// distributed under the Licence is distributed on an "AS IS" basis,q
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the Licence for the specific language governing permissions and
 // limitations under the Licence.
@@ -23,12 +23,12 @@ import Observation
 /// updates when the underlying EventKit store changes.
 @Observable
 @MainActor
-public final class CalendarService {
+public final class CalendarService: CalendarServiceProtocol {
 
     // MARK: - Properties
 
     /// The permission service used to access the EventKit store.
-    private let permissionService: PermissionService
+    private let permissionService: any PermissionServiceProtocol
 
     /// The currently loaded calendars.
     public private(set) var calendars: [Calendar] = []
@@ -45,7 +45,7 @@ public final class CalendarService {
     /// Creates a new calendar service.
     ///
     /// - Parameter permissionService: The permission service to use for EventKit access.
-    public init(permissionService: PermissionService) {
+    public init(permissionService: any PermissionServiceProtocol) {
         self.permissionService = permissionService
         self.setupStoreChangeObserver()
     }
@@ -154,6 +154,12 @@ public final class CalendarService {
 
     /// Sets up an observer to automatically refresh calendars when EventKit changes.
     private func setupStoreChangeObserver() {
+        // Only observe store changes if we have permission
+        // This prevents accessing eventStore in mock tests
+        guard permissionService.hasCalendarAccess else {
+            return
+        }
+
         storeChangedObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: permissionService.eventStore,

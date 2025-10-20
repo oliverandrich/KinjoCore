@@ -23,6 +23,12 @@ struct ReminderFetchTests {
     @Test("Reminder model initialises from EKReminder")
     func reminderInitialisesFromEKReminder() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         // Create a test reminder in memory (won't be saved)
@@ -49,6 +55,12 @@ struct ReminderFetchTests {
     @Test("Reminder model handles optional fields")
     func reminderHandlesOptionalFields() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -71,6 +83,12 @@ struct ReminderFetchTests {
     @Test("Reminder model includes lastModifiedDate and completionDate")
     func reminderIncludesTimestamps() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -98,6 +116,12 @@ struct ReminderFetchTests {
     @Test("Reminder hasTags returns correct value")
     func reminderHasTagsReturnsCorrectValue() {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -135,6 +159,12 @@ struct ReminderFetchTests {
     @Test("Reminder hasNote returns correct value")
     func reminderHasNoteReturnsCorrectValue() {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -172,6 +202,12 @@ struct ReminderFetchTests {
     @Test("Reminder hasURL detects URLs in title")
     func reminderHasURLDetectsURLsInTitle() {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -200,6 +236,12 @@ struct ReminderFetchTests {
     @Test("Reminder hasURL detects URLs in notes")
     func reminderHasURLDetectsURLsInNotes() {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {
@@ -228,6 +270,12 @@ struct ReminderFetchTests {
     @Test("Reminder hasURL detects URL in URL field")
     func reminderHasURLDetectsURLInURLField() {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let store = permissionService.eventStore
 
         guard let calendar = store.calendars(for: .reminder).first else {

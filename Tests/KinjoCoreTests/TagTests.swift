@@ -22,19 +22,10 @@ struct TagTests {
 
     @Test("Reminder extracts tags from notes")
     func reminderExtractsTagsFromNotes() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = "Meeting about #work and #project"
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: "Meeting about #work and #project"
+        )
 
         #expect(reminder.tags.count == 2)
         #expect(reminder.tags.contains("work"))
@@ -43,38 +34,20 @@ struct TagTests {
 
     @Test("Reminder tags are lowercase and sorted")
     func reminderTagsAreLowercaseAndSorted() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = "#Zebra #Apple #Work"
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: "#Zebra #Apple #Work"
+        )
 
         #expect(reminder.tags == ["apple", "work", "zebra"])
     }
 
     @Test("Reminder removes duplicate tags")
     func reminderRemovesDuplicateTags() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = "#work #Work #WORK #project #work"
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: "#work #Work #WORK #project #work"
+        )
 
         #expect(reminder.tags.count == 2)
         #expect(reminder.tags.contains("work"))
@@ -83,57 +56,30 @@ struct TagTests {
 
     @Test("Reminder handles notes without tags")
     func reminderHandlesNotesWithoutTags() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = "Just regular notes without any hashtags"
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: "Just regular notes without any hashtags"
+        )
 
         #expect(reminder.tags.isEmpty)
     }
 
     @Test("Reminder handles nil notes")
     func reminderHandlesNilNotes() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = nil
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: nil
+        )
 
         #expect(reminder.tags.isEmpty)
     }
 
     @Test("Reminder extracts tags with Unicode characters")
     func reminderExtractsTagsWithUnicode() {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .reminder).first else {
-            return
-        }
-
-        let ekReminder = EKReminder(eventStore: store)
-        ekReminder.calendar = calendar
-        ekReminder.title = "Test"
-        ekReminder.notes = "#café #über #日本語"
-
-        let reminder = Reminder(from: ekReminder)
+        let reminder = Reminder.makeTest(
+            title: "Test",
+            notes: "#café #über #日本語"
+        )
 
         #expect(reminder.tags.contains("café"))
         #expect(reminder.tags.contains("über"))
@@ -324,9 +270,48 @@ struct TagTests {
         try? await reminderService.deleteReminder(reminder3)
     }
 
-    @Test("TagFilter.excludingTags filters with NOT logic")
+    @Test("TagFilter.notHasTag filters by excluding single tag")
     @MainActor
-    func tagFilterExcludingTagsUsesNotLogic() async throws {
+    func tagFilterNotHasTagExcludesSingleTag() async throws {
+        let permissionService = PermissionService()
+        let reminderService = ReminderService(permissionService: permissionService)
+
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        try await reminderService.fetchReminderLists()
+
+        guard let firstList = reminderService.reminderLists.first else {
+            return
+        }
+
+        // Create test reminders
+        let reminder1 = try await reminderService.createReminder(
+            title: "Test 1",
+            notes: "#work #important",
+            in: firstList
+        )
+        let reminder2 = try await reminderService.createReminder(
+            title: "Test 2",
+            notes: "#personal",
+            in: firstList
+        )
+
+        // Fetch reminders that DON'T have #work tag
+        let results = try await reminderService.fetchReminders(tagFilter: .notHasTag("work"))
+
+        #expect(!results.contains { $0.id == reminder1.id })
+        #expect(results.contains { $0.id == reminder2.id })
+
+        // Clean up
+        try? await reminderService.deleteReminder(reminder1)
+        try? await reminderService.deleteReminder(reminder2)
+    }
+
+    @Test("TagFilter.notHasAnyTag filters with NOT logic")
+    @MainActor
+    func tagFilterNotHasAnyTagUsesNotLogic() async throws {
         let permissionService = PermissionService()
         let reminderService = ReminderService(permissionService: permissionService)
 
@@ -359,12 +344,61 @@ struct TagTests {
 
         // Fetch excluding archived
         let results = try await reminderService.fetchReminders(
-            tagFilter: .excludingTags(["archived"])
+            tagFilter: .notHasAnyTag(["archived"])
         )
 
         #expect(results.contains { $0.id == reminder1.id })
         #expect(results.contains { $0.id == reminder2.id })
         #expect(!results.contains { $0.id == reminder3.id })
+
+        // Clean up
+        try? await reminderService.deleteReminder(reminder1)
+        try? await reminderService.deleteReminder(reminder2)
+        try? await reminderService.deleteReminder(reminder3)
+    }
+
+    @Test("TagFilter.notHasAllTags filters with NOT AND logic")
+    @MainActor
+    func tagFilterNotHasAllTagsUsesNotAndLogic() async throws {
+        let permissionService = PermissionService()
+        let reminderService = ReminderService(permissionService: permissionService)
+
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        try await reminderService.fetchReminderLists()
+
+        guard let firstList = reminderService.reminderLists.first else {
+            return
+        }
+
+        // Create test reminders
+        let reminder1 = try await reminderService.createReminder(
+            title: "Test 1",
+            notes: "#work #important #urgent",
+            in: firstList
+        )
+        let reminder2 = try await reminderService.createReminder(
+            title: "Test 2",
+            notes: "#work #important",
+            in: firstList
+        )
+        let reminder3 = try await reminderService.createReminder(
+            title: "Test 3",
+            notes: "#work",
+            in: firstList
+        )
+
+        // Fetch reminders that DON'T have both work AND important
+        // (i.e., missing at least one of them)
+        let results = try await reminderService.fetchReminders(
+            tagFilter: .notHasAllTags(["work", "important"])
+        )
+
+        #expect(!results.contains { $0.id == reminder1.id }) // Has both
+        #expect(!results.contains { $0.id == reminder2.id }) // Has both
+        #expect(results.contains { $0.id == reminder3.id })  // Missing important
 
         // Clean up
         try? await reminderService.deleteReminder(reminder1)
@@ -424,7 +458,7 @@ struct TagTests {
         set.insert(.hasTag("work"))
         set.insert(.hasAnyTag(["work", "personal"]))
         set.insert(.hasAllTags(["work", "important"]))
-        set.insert(.excludingTags(["archived"]))
+        set.insert(.notHasAnyTag(["archived"]))
 
         #expect(set.count == 5)
 

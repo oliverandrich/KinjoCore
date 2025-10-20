@@ -16,7 +16,7 @@
 import Foundation
 
 /// Filter options for fetching reminders.
-public enum ReminderFilter: Sendable, Hashable {
+public enum ReminderFilter: Sendable, Hashable, Codable {
 
     /// Fetch all reminders, regardless of completion status.
     case all

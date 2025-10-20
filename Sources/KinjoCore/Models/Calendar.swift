@@ -60,6 +60,28 @@ public struct Calendar: Identifiable, Sendable, Hashable {
         self.isSubscribed = calendar.isSubscribed
     }
 
+    /// Internal initialiser for testing purposes.
+    ///
+    /// This initialiser allows creating a Calendar directly without requiring EventKit.
+    /// It is intended for use in tests only.
+    internal init(
+        id: String,
+        title: String,
+        colour: CGColor,
+        sourceName: String,
+        sourceID: String,
+        isImmutable: Bool = false,
+        isSubscribed: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.colour = colour
+        self.sourceName = sourceName
+        self.sourceID = sourceID
+        self.isImmutable = isImmutable
+        self.isSubscribed = isSubscribed
+    }
+
     // MARK: - Hashable
 
     public func hash(into hasher: inout Hasher) {

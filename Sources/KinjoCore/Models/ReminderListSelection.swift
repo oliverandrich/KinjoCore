@@ -33,6 +33,13 @@ import Foundation
 ///     from: .specific([workList, shoppingList].compactMap { $0 }),
 ///     filter: .all
 /// )
+///
+/// // Fetch from all lists EXCEPT specific ones
+/// let personalList = reminderLists.first { $0.title == "Personal" }
+/// let excludedReminders = try await reminderService.fetchReminders(
+///     from: .excluding([personalList].compactMap { $0 }),
+///     filter: .all
+/// )
 /// ```
 public enum ReminderListSelection: Sendable, Hashable {
 
@@ -44,6 +51,13 @@ public enum ReminderListSelection: Sendable, Hashable {
     /// If an empty array is provided, it will be treated as `.all`.
     case specific([ReminderList])
 
+    /// Fetch reminders from all lists EXCEPT the specified ones.
+    ///
+    /// This is the inverse of `specific`: includes all reminders that are not in the specified lists.
+    ///
+    /// If an empty array is provided, it will be treated as `.all`.
+    case excluding([ReminderList])
+
     // MARK: - Hashable
 
     public func hash(into hasher: inout Hasher) {
@@ -53,6 +67,9 @@ public enum ReminderListSelection: Sendable, Hashable {
         case .specific(let lists):
             hasher.combine(1)
             hasher.combine(lists)
+        case .excluding(let lists):
+            hasher.combine(2)
+            hasher.combine(lists)
         }
     }
 
@@ -61,6 +78,8 @@ public enum ReminderListSelection: Sendable, Hashable {
         case (.all, .all):
             return true
         case (.specific(let lhsLists), .specific(let rhsLists)):
+            return lhsLists == rhsLists
+        case (.excluding(let lhsLists), .excluding(let rhsLists)):
             return lhsLists == rhsLists
         default:
             return false

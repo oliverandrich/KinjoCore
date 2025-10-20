@@ -1,6 +1,15 @@
 {
-  "originHash" : "f29d6f152c327cfc62ca22aa49deebb47cf28902aedc31dafd8f1c2c62c6cbb1",
+  "originHash" : "8e79a938dba3c68f58bfea538dcf15627ae1fa22eee7b496e07f9ed62330bc86",
   "pins" : [
+    {
+      "identity" : "mockingkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/danielsaidi/MockingKit.git",
+      "state" : {
+        "revision" : "a1096bb9b149b70147e6fb8294f720989edf72ae",
+        "version" : "1.5.0"
+      }
+    },
     {
       "identity" : "swift-docc-plugin",
       "kind" : "remoteSourceControl",

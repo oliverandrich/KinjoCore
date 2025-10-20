@@ -346,24 +346,34 @@ public final class TaskParser: Sendable {
                 }
             }
 
+            // Skip relative date words - let Phase 7 (extractRelativeDates) handle them with proper calendar
+            let relativeDateWords = [
+                "today", "tomorrow", "heute", "morgen", "übermorgen",
+                "aujourd'hui", "demain", "hoy", "mañana"
+            ]
+            let firstWord = matchText.lowercased().split(separator: " ").first.map(String.init) ?? ""
+            if relativeDateWords.contains(firstWord) {
+                // Skip relative dates - they should be handled by extractRelativeDates with proper timezone
+                continue
+            }
+
             // Skip if the match starts with an unexpected word (not a date/time word)
             // This prevents "Breakfast tomorrow" from being matched as a date
             let dateTimeWords = [
                 // English
-                "today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+                "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
                 "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
                 // German
-                "heute", "morgen", "übermorgen", "montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag",
+                "montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag",
                 "januar", "februar", "märz", "april", "mai", "juni", "juli", "august", "september", "oktober", "november", "dezember",
                 // French
-                "aujourd'hui", "demain", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+                "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
                 "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre",
                 // Spanish
-                "hoy", "mañana", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
+                "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
                 "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
             ]
 
-            let firstWord = matchText.lowercased().split(separator: " ").first.map(String.init) ?? ""
             let startsWithNumber = firstWord.first?.isNumber ?? false
             if !firstWord.isEmpty && !dateTimeWords.contains(firstWord) && !startsWithNumber {
                 // First word is not a recognized date/time word and not a number - skip this match
@@ -542,7 +552,7 @@ public final class TaskParser: Sendable {
         var mutableInput = input
         var annotations = annotations
         var extractedDeadline: Date?
-        var extractedTime = currentTime
+        let extractedTime = currentTime
 
         // Only process if we have a scheduled date
         guard let scheduledDate = scheduledDate else {
@@ -712,14 +722,43 @@ public final class TaskParser: Sendable {
         let sortedKeywords = config.language.deadlineKeywords.sorted { $0.count > $1.count }
 
         for keyword in sortedKeywords {
-            if let keywordRange = lowerInput.range(of: keyword) {
+            if lowerInput.range(of: keyword) != nil {
                 // Look for a date after the keyword (in original input)
                 guard let originalKeywordRange = input.range(of: keyword, options: .caseInsensitive) else {
                     continue
                 }
                 let remainingText = String(input[originalKeywordRange.upperBound...])
 
-                // Try to extract absolute date first
+                // Try relative dates FIRST (to use proper calendar/timezone)
+                let sortedRelKeywords = config.language.relativeDates.keys.sorted { $0.count > $1.count }
+                var foundRelativeDate = false
+                for relKeyword in sortedRelKeywords {
+                    let trimmedRemainingText = remainingText.trimmingCharacters(in: .whitespaces).lowercased()
+                    if trimmedRemainingText.hasPrefix(relKeyword) {
+                        guard let modifier = config.language.relativeDates[relKeyword] else { continue }
+
+                        let fullMatchText = keyword + " " + relKeyword
+                        extractedDeadline = applyRelativeDateModifier(modifier, to: referenceDate)
+
+                        if let fullRange = input.range(of: fullMatchText, options: .caseInsensitive) {
+                            annotations.append(Annotation(
+                                range: fullRange,
+                                text: String(input[fullRange]),
+                                type: .deadline
+                            ))
+
+                            mutableInput = mutableInput.replacingOccurrences(of: fullMatchText, with: "", options: .caseInsensitive)
+                        }
+                        foundRelativeDate = true
+                        break
+                    }
+                }
+
+                if foundRelativeDate {
+                    break // Exit keyword loop, we found our deadline
+                }
+
+                // Try to extract absolute date (only if no relative date was found)
                 let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue)
                 let matches = detector?.matches(
                     in: remainingText,
@@ -771,29 +810,6 @@ public final class TaskParser: Sendable {
                         mutableInput = mutableInput.replacingOccurrences(of: fullMatchText, with: "", options: .caseInsensitive)
                     }
                     break
-                }
-
-                // Try relative dates (sorted by length for longest match first)
-                let sortedRelKeywords = config.language.relativeDates.keys.sorted { $0.count > $1.count }
-                for relKeyword in sortedRelKeywords {
-                    let trimmedRemainingText = remainingText.trimmingCharacters(in: .whitespaces).lowercased()
-                    if trimmedRemainingText.hasPrefix(relKeyword) {
-                        guard let modifier = config.language.relativeDates[relKeyword] else { continue }
-
-                        let fullMatchText = keyword + " " + relKeyword
-                        extractedDeadline = applyRelativeDateModifier(modifier, to: referenceDate)
-
-                        if let fullRange = input.range(of: fullMatchText, options: .caseInsensitive) {
-                            annotations.append(Annotation(
-                                range: fullRange,
-                                text: String(input[fullRange]),
-                                type: .deadline
-                            ))
-
-                            mutableInput = mutableInput.replacingOccurrences(of: fullMatchText, with: "", options: .caseInsensitive)
-                        }
-                        break
-                    }
                 }
 
                 break // Only match one deadline

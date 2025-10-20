@@ -122,8 +122,8 @@ struct ReminderListSelectionTests {
             // Fetch reminders from specific list
             let reminders = try await reminderService.fetchReminders(from: .specific([firstList]))
 
-            // Verify it returns an array (may be empty)
-            #expect(reminders is [Reminder])
+            // Verify the fetch succeeded (array may be empty)
+            _ = reminders
         }
     }
 
@@ -148,8 +148,8 @@ struct ReminderListSelectionTests {
             // Fetch reminders from two lists
             let reminders = try await reminderService.fetchReminders(from: .specific([list1, list2]))
 
-            // Verify it returns an array (may be empty)
-            #expect(reminders is [Reminder])
+            // Verify the fetch succeeded (array may be empty)
+            _ = reminders
         }
     }
 
@@ -172,5 +172,151 @@ struct ReminderListSelectionTests {
 
         // Both should return the same results
         #expect(remindersFromEmpty.count == remindersFromAll.count)
+    }
+
+    @Test("ReminderListSelection.excluding excludes specified lists")
+    @MainActor
+    func excludingCaseExcludesSpecifiedLists() async throws {
+        let permissionService = PermissionService()
+        let reminderService = ReminderService(permissionService: permissionService)
+
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        try await reminderService.fetchReminderLists()
+
+        guard reminderService.reminderLists.count >= 2 else {
+            // Need at least 2 lists for this test
+            return
+        }
+
+        let list1 = reminderService.reminderLists[0]
+        let list2 = reminderService.reminderLists[1]
+
+        // Create reminders in different lists
+        let reminder1 = try await reminderService.createReminder(
+            title: "Task in List 1",
+            in: list1
+        )
+        let reminder2 = try await reminderService.createReminder(
+            title: "Task in List 2",
+            in: list2
+        )
+
+        // Fetch excluding list2 (should only get list1's reminder)
+        let results = try await reminderService.fetchReminders(
+            from: .excluding([list2])
+        )
+
+        #expect(results.contains { $0.id == reminder1.id })
+        #expect(!results.contains { $0.id == reminder2.id })
+
+        // Clean up
+        try? await reminderService.deleteReminder(reminder1)
+        try? await reminderService.deleteReminder(reminder2)
+    }
+
+    @Test("ReminderListSelection.excluding with empty array acts as .all")
+    @MainActor
+    func excludingWithEmptyArrayActsAsAll() async throws {
+        let permissionService = PermissionService()
+        let reminderService = ReminderService(permissionService: permissionService)
+
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        try await reminderService.fetchReminderLists()
+
+        guard let firstList = reminderService.reminderLists.first else {
+            return
+        }
+
+        // Create test reminder
+        let reminder = try await reminderService.createReminder(
+            title: "Test",
+            in: firstList
+        )
+
+        // Fetch excluding empty array (should get all)
+        let results = try await reminderService.fetchReminders(
+            from: .excluding([])
+        )
+
+        #expect(results.contains { $0.id == reminder.id })
+
+        // Clean up
+        try? await reminderService.deleteReminder(reminder)
+    }
+
+    @Test("ReminderListSelection.excluding with multiple lists")
+    @MainActor
+    func excludingWithMultipleLists() async throws {
+        let permissionService = PermissionService()
+        let reminderService = ReminderService(permissionService: permissionService)
+
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
+        try await reminderService.fetchReminderLists()
+
+        guard reminderService.reminderLists.count >= 3 else {
+            // Need at least 3 lists for this test
+            return
+        }
+
+        let list1 = reminderService.reminderLists[0]
+        let list2 = reminderService.reminderLists[1]
+        let list3 = reminderService.reminderLists[2]
+
+        // Create reminders in different lists
+        let reminder1 = try await reminderService.createReminder(
+            title: "Task 1",
+            in: list1
+        )
+        let reminder2 = try await reminderService.createReminder(
+            title: "Task 2",
+            in: list2
+        )
+        let reminder3 = try await reminderService.createReminder(
+            title: "Task 3",
+            in: list3
+        )
+
+        // Fetch excluding list1 and list3 (should only get list2's reminder)
+        let results = try await reminderService.fetchReminders(
+            from: .excluding([list1, list3])
+        )
+
+        #expect(!results.contains { $0.id == reminder1.id })
+        #expect(results.contains { $0.id == reminder2.id })
+        #expect(!results.contains { $0.id == reminder3.id })
+
+        // Clean up
+        try? await reminderService.deleteReminder(reminder1)
+        try? await reminderService.deleteReminder(reminder2)
+        try? await reminderService.deleteReminder(reminder3)
+    }
+
+    @Test("ReminderListSelection.excluding equality works correctly")
+    func excludingEqualityWorksCorrectly() {
+        let permissionService = PermissionService()
+        let calendars = permissionService.eventStore.calendars(for: .reminder)
+
+        if calendars.count >= 2 {
+            let list1 = ReminderList(from: calendars[0])
+            let list2 = ReminderList(from: calendars[1])
+
+            let selection1 = ReminderListSelection.excluding([list1])
+            let selection2 = ReminderListSelection.excluding([list1])
+            let selection3 = ReminderListSelection.excluding([list2])
+
+            #expect(selection1 == selection2)
+            #expect(selection1 != selection3)
+            #expect(ReminderListSelection.all != selection1)
+            #expect(ReminderListSelection.specific([list1]) != selection1)
+        }
     }
 }

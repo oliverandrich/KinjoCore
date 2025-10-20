@@ -23,12 +23,12 @@ import Observation
 /// updates when the underlying EventKit store changes.
 @Observable
 @MainActor
-public final class ReminderService {
+public final class ReminderService: ReminderServiceProtocol {
 
     // MARK: - Properties
 
     /// The permission service used to access the EventKit store.
-    private let permissionService: PermissionService
+    private let permissionService: any PermissionServiceProtocol
 
     /// The currently loaded reminder lists.
     public private(set) var reminderLists: [ReminderList] = []
@@ -45,7 +45,7 @@ public final class ReminderService {
     /// Creates a new reminder service.
     ///
     /// - Parameter permissionService: The permission service to use for EventKit access.
-    public init(permissionService: PermissionService) {
+    public init(permissionService: any PermissionServiceProtocol) {
         self.permissionService = permissionService
         self.setupStoreChangeObserver()
     }
@@ -274,6 +274,7 @@ public final class ReminderService {
     ///   - filter: The filter to apply (all, completed, or incomplete). Defaults to `.all`.
     ///   - dateRange: The date range filter to apply. Defaults to `.all`.
     ///   - tagFilter: The tag filter to apply. Defaults to `.none`.
+    ///   - textSearch: The full-text search filter to apply. Defaults to `.none`.
     ///   - sortBy: The sort option to apply. Defaults to `.title`.
     /// - Returns: An array of filtered and sorted reminders.
     /// - Throws: An error if fetching fails, if permissions are not granted, or if a specified list is not found.
@@ -283,6 +284,7 @@ public final class ReminderService {
         filter: ReminderFilter = .all,
         dateRange: DateRangeFilter = .all,
         tagFilter: TagFilter = .none,
+        textSearch: TextSearchFilter = .none,
         sortBy: ReminderSortOption = .title
     ) async throws -> [Reminder] {
         guard permissionService.hasReminderAccess else {
@@ -312,6 +314,17 @@ public final class ReminderService {
                 }
                 calendars = selectedCalendars
             }
+
+        case .excluding(let lists):
+            // Empty array is treated as .all
+            if lists.isEmpty {
+                calendars = permissionService.eventStore.calendars(for: .reminder)
+            } else {
+                // Fetch reminders from all lists except the specified ones
+                let allCalendars = permissionService.eventStore.calendars(for: .reminder)
+                let excludedIDs = Set(lists.map { $0.id })
+                calendars = allCalendars.filter { !excludedIDs.contains($0.calendarIdentifier) }
+            }
         }
 
         let eventStore = permissionService.eventStore
@@ -334,6 +347,9 @@ public final class ReminderService {
 
         // Apply tag filter
         reminders = self.applyTagFilter(tagFilter, to: reminders)
+
+        // Apply text search filter
+        reminders = self.applyTextFilter(textSearch, to: reminders)
 
         // Apply sorting
         reminders = self.applySort(sortBy, to: reminders)
@@ -637,7 +653,7 @@ public final class ReminderService {
     // MARK: - Private Methods
 
     /// Applies the specified filter to an array of reminders.
-    private func applyFilter(_ filter: ReminderFilter, to reminders: [Reminder]) -> [Reminder] {
+    public func applyFilter(_ filter: ReminderFilter, to reminders: [Reminder]) -> [Reminder] {
         switch filter {
         case .all:
             return reminders
@@ -651,7 +667,7 @@ public final class ReminderService {
     /// Applies the specified date range filter to an array of reminders.
     ///
     /// Reminders without a due date are excluded when a date range filter is active (except for `.all`).
-    private func applyDateFilter(_ dateFilter: DateRangeFilter, to reminders: [Reminder]) -> [Reminder] {
+    public func applyDateFilter(_ dateFilter: DateRangeFilter, to reminders: [Reminder]) -> [Reminder] {
         guard let range = dateFilter.dateRange() else {
             // .all case - no filtering
             return reminders
@@ -671,7 +687,7 @@ public final class ReminderService {
     /// Applies the specified tag filter to an array of reminders.
     ///
     /// Tags are extracted from the reminder's notes field and compared case-insensitively.
-    private func applyTagFilter(_ tagFilter: TagFilter, to reminders: [Reminder]) -> [Reminder] {
+    public func applyTagFilter(_ tagFilter: TagFilter, to reminders: [Reminder]) -> [Reminder] {
         switch tagFilter {
         case .none:
             return reminders
@@ -680,10 +696,20 @@ public final class ReminderService {
             let lowercaseTag = tag.lowercased()
             return reminders.filter { $0.tags.contains(lowercaseTag) }
 
+        case .notHasTag(let tag):
+            let lowercaseTag = tag.lowercased()
+            return reminders.filter { !$0.tags.contains(lowercaseTag) }
+
         case .hasAnyTag(let tags):
             let lowercaseTags = Set(tags.map { $0.lowercased() })
             return reminders.filter { reminder in
                 !Set(reminder.tags).isDisjoint(with: lowercaseTags)
+            }
+
+        case .notHasAnyTag(let tags):
+            let lowercaseTags = Set(tags.map { $0.lowercased() })
+            return reminders.filter { reminder in
+                Set(reminder.tags).isDisjoint(with: lowercaseTags)
             }
 
         case .hasAllTags(let tags):
@@ -692,16 +718,45 @@ public final class ReminderService {
                 lowercaseTags.isSubset(of: Set(reminder.tags))
             }
 
-        case .excludingTags(let tags):
+        case .notHasAllTags(let tags):
             let lowercaseTags = Set(tags.map { $0.lowercased() })
             return reminders.filter { reminder in
-                Set(reminder.tags).isDisjoint(with: lowercaseTags)
+                !lowercaseTags.isSubset(of: Set(reminder.tags))
+            }
+        }
+    }
+
+    /// Applies the specified text search filter to an array of reminders.
+    ///
+    /// Searches are case-insensitive and can target titles, notes, or both.
+    public func applyTextFilter(_ textFilter: TextSearchFilter, to reminders: [Reminder]) -> [Reminder] {
+        switch textFilter {
+        case .none:
+            return reminders
+
+        case .contains(let query):
+            let lowercaseQuery = query.lowercased()
+            return reminders.filter { reminder in
+                reminder.title.lowercased().contains(lowercaseQuery) ||
+                (reminder.notes?.lowercased().contains(lowercaseQuery) ?? false)
+            }
+
+        case .titleOnly(let query):
+            let lowercaseQuery = query.lowercased()
+            return reminders.filter { reminder in
+                reminder.title.lowercased().contains(lowercaseQuery)
+            }
+
+        case .notesOnly(let query):
+            let lowercaseQuery = query.lowercased()
+            return reminders.filter { reminder in
+                reminder.notes?.lowercased().contains(lowercaseQuery) ?? false
             }
         }
     }
 
     /// Applies the specified sort option to an array of reminders.
-    private func applySort(_ sortOption: ReminderSortOption, to reminders: [Reminder]) -> [Reminder] {
+    public func applySort(_ sortOption: ReminderSortOption, to reminders: [Reminder]) -> [Reminder] {
         switch sortOption {
         case .title:
             return reminders.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
@@ -744,6 +799,12 @@ public final class ReminderService {
 
     /// Sets up an observer to automatically refresh reminder lists when EventKit changes.
     private func setupStoreChangeObserver() {
+        // Only observe store changes if we have permission
+        // This prevents accessing eventStore in mock tests
+        guard permissionService.hasReminderAccess else {
+            return
+        }
+
         storeChangedObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: permissionService.eventStore,

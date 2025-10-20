@@ -141,6 +141,32 @@ public struct Event: Identifiable, Sendable, Hashable {
         self.url = event.url
     }
 
+    /// Internal initialiser for testing purposes.
+    ///
+    /// This initialiser allows creating an Event directly without requiring EventKit.
+    /// It is intended for use in tests only.
+    internal init(
+        id: String,
+        title: String,
+        notes: String? = nil,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool = false,
+        location: String? = nil,
+        calendarID: String,
+        url: URL? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.notes = notes
+        self.startDate = startDate
+        self.endDate = endDate
+        self.isAllDay = isAllDay
+        self.location = location
+        self.calendarID = calendarID
+        self.url = url
+    }
+
     // MARK: - Hashable
 
     public func hash(into hasher: inout Hasher) {

@@ -19,7 +19,7 @@ import Foundation
 typealias FoundationCalendar = Foundation.Calendar
 
 /// Filter options for filtering reminders by date range.
-public enum DateRangeFilter: Sendable, Hashable {
+public enum DateRangeFilter: Sendable, Hashable, Codable {
 
     /// No date filtering - returns all reminders regardless of due date.
     case all

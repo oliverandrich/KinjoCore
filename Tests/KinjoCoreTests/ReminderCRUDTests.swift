@@ -146,7 +146,7 @@ struct ReminderCRUDTests {
             in: firstList
         )
 
-        let originalModifiedDate = reminder.lastModifiedDate
+        _ = reminder.lastModifiedDate
 
         // Update title
         let updatedReminder = try await reminderService.updateReminder(

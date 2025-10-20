@@ -11,32 +11,60 @@ KinjoCore serves as the core service layer that will be integrated into both mac
 
 ## Development Commands
 
-### Building
+This project uses [just](https://github.com/casey/just) as a command runner. All common development tasks are defined in the `justfile`.
+
+### Prerequisites
+
+Install required tools:
 ```bash
-swift build
+brew install just xcbeautify
 ```
 
-### Testing
+### Available Just Commands
+
 ```bash
-# Run all tests
+# Building
+just build              # Build the package using swift build
+
+# Testing
+just test               # Run all tests (macOS and iOS)
+just test-macos         # Run tests on macOS only
+just test-ios           # Run tests on iOS Simulator (iPhone 17, iOS 26.0)
+
+# Documentation
+just docs               # Generate documentation for GitHub Pages
+just preview-docs       # Preview documentation with live reload
+
+# Cleaning
+just clean              # Clean build artifacts
+```
+
+### Testing Strategy
+- **During development**: Use `just test-macos` for quick feedback
+- **Before commits/PRs**: Use `just test` to run tests on both platforms
+- Tests on both platforms are important as EventKit behaviour can differ between iOS and macOS
+
+### Direct Swift Commands (alternative to just)
+If you need to use Swift Package Manager commands directly:
+
+```bash
+# Build
+swift build
+
+# Test (macOS only via SPM)
 swift test
 
-# Run tests with verbose output
+# Test with verbose output
 swift test --verbose
 
 # Run a specific test
 swift test --filter <test-name>
-```
 
-### Cleaning Build Artifacts
-```bash
+# Clean
 swift package clean
 ```
 
-### Generate Xcode Project (if needed)
-```bash
-swift package generate-xcodeproj
-```
+**Note**: For cross-platform testing and coverage reports, prefer using the `just` commands as they properly configure xcodebuild with the correct destinations and settings.
 
 ## Documentation & Code Style
 
@@ -208,6 +236,69 @@ This project uses the **Swift Testing** framework (introduced in Swift 5.9+), NO
 - Use `#expect(...)` for assertions instead of `XCTAssert...`
 - Tests can be async by default (`async throws`)
 - Import tests with `@testable import KinjoCore`
+
+### Testing with Mocks (MockingKit)
+
+This project uses **protocol-based dependency injection** combined with **MockingKit** for testing.
+
+**Key principles:**
+- All services implement protocols (`PermissionServiceProtocol`, `ReminderServiceProtocol`, `CalendarServiceProtocol`)
+- Services accept protocol types in their initialisers: `init(permissionService: any PermissionServiceProtocol)`
+- Tests use simple stub-based mocks instead of EventKit dependencies
+
+**Creating mocks:**
+Mock implementations are located in `Tests/KinjoCoreTests/Mocks/`. Each mock provides stub implementations that return configurable values:
+
+```swift
+class MockPermissionService: PermissionServiceProtocol {
+    var mockHasReminderAccess: Bool = true  // Configurable
+    var mockHasCalendarAccess: Bool = true
+
+    var hasReminderAccess: Bool {
+        mockHasReminderAccess  // Returns configured value
+    }
+
+    // ... other methods
+}
+```
+
+**Using mocks in tests:**
+```swift
+@Test("My test")
+@MainActor
+func myTest() async throws {
+    // Create mock
+    let mockPermissions = MockPermissionService()
+    mockPermissions.mockHasReminderAccess = true
+
+    // Inject into service
+    let service = ReminderService(permissionService: mockPermissions)
+
+    // Test without EventKit
+    let result = service.applyFilter(.all, to: testReminders)
+    #expect(result.count == 5)
+}
+```
+
+**Creating test data:**
+Use `Reminder.makeTest()` helper to create test reminders without EventKit:
+
+```swift
+let testReminder = Reminder.makeTest(
+    title: "Test Task",
+    notes: "Notes #tag",
+    dueDate: Date(),
+    priority: .high,
+    isCompleted: false
+)
+```
+
+**Why this approach?**
+- ✅ Tests run without EventKit permissions
+- ✅ Fast, isolated tests
+- ✅ Works on CI/CD without interactive permission prompts
+- ✅ Simple, maintainable mocks (no complex mocking framework magic)
+- ✅ Tests our code, not Apple's EventKit implementation
 
 ### Swift Version
 The project requires Swift 6.2 or higher (`swift-tools-version: 6.2` in Package.swift).

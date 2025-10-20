@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Protocol-based service architecture for improved testability
+  - `PermissionServiceProtocol`, `ReminderServiceProtocol`, and `CalendarServiceProtocol`
+  - All services now use dependency injection with protocols instead of concrete types
+  - Enables proper unit testing without EventKit dependencies
+- MockingKit integration for clean, maintainable test mocks
+  - Simple stub-based mock implementations for all service protocols
+  - Test helper (`Reminder.makeTest`) for creating test data without EventKit
+  - Improved test isolation and reliability
+- SmartFilter system for creating custom reminder views
+  - `SmartFilter` SwiftData model with iCloud synchronisation
+  - `SmartFilterService` for CRUD operations and filter management
+  - `FilterCriteria` struct for serialisable filter configuration
+  - Built-in filters: "All", "Today", "Tomorrow", "This Week", "Flagged", "Completed"
+  - Support for custom icons (SF Symbols), tint colours, and sort order
+  - Built-in filters cannot be deleted
+- Full-text search filtering (`TextSearchFilter`)
+  - Search in title only, notes only, or both
+  - Case-insensitive search
+  - Integrates with existing filter pipeline
+- Extended `TagFilter` with inverted filter options
+  - `.notHasTag(String)` - excludes reminders with specific tag
+  - `.notHasAnyTag([String])` - excludes reminders with any of the tags (renamed from `excludingTags`)
+  - `.notHasAllTags([String])` - includes reminders missing at least one tag
+- Extended `ReminderListSelection` with exclusion option
+  - `.excluding([ReminderList])` - fetch from all lists except specified ones
+
+### Changed
+- Service architecture refactored to use protocol-based dependency injection
+  - Services accept protocol types instead of concrete implementations
+  - Filter and sort methods in `ReminderService` are now `public` for direct testing
+- **Breaking:** `TagFilter.excludingTags` renamed to `.notHasAnyTag` for consistency
+- All filter enums now conform to `Codable` for serialisation
+  - `ReminderFilter`, `DateRangeFilter`, `TagFilter`, `ReminderSortOption`, `TextSearchFilter`
+- `ReminderService.fetchReminders()` now accepts `textSearch` parameter
+- Tests adapted to handle missing EventKit permissions in CI environments
+  - Tests that require EventKit access now gracefully skip when permissions are unavailable
+  - Ensures CI workflows succeed without interactive permission prompts
+- Significantly improved test coverage with comprehensive unit tests
+  - Added tests for all model computed properties (Reminder, Event, RecurringPattern)
+  - Added tests for FilterCriteria conversion methods
+  - Added tests for Calendar and ReminderList models
+  - Test count increased from 320 to 400+ tests
+
 ## [0.10.0] - 2025-10-19
 
 ### Added

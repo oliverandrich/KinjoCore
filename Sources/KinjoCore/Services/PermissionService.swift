@@ -22,7 +22,7 @@ import Observation
 /// This service handles authorisation requests for both reminders and calendars,
 /// and provides a centralised `EKEventStore` instance for use by other services.
 @Observable
-public final class PermissionService {
+public final class PermissionService: PermissionServiceProtocol {
 
     // MARK: - Properties
 

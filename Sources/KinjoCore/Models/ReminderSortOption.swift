@@ -16,7 +16,7 @@
 import Foundation
 
 /// Sort options for reminder lists.
-public enum ReminderSortOption: Sendable, Hashable {
+public enum ReminderSortOption: Sendable, Hashable, Codable {
 
     /// Sort alphabetically by title (A-Z).
     case title

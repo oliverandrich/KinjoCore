@@ -14,7 +14,7 @@
 // limitations under the Licence.
 
 import Testing
-import EventKit
+import Foundation
 @testable import KinjoCore
 
 @Suite("Event Meeting Link Detection Tests")
@@ -23,22 +23,11 @@ struct EventMeetingLinkTests {
     // MARK: - Teams Meeting Tests
 
     @Test("Event detects Teams meeting from URL field")
-    func eventDetectsTeamsMeetingFromURL() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Teams Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc123")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsTeamsMeetingFromURL() {
+        let event = Event.makeTest(
+            title: "Teams Meeting",
+            url: URL(string: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc123")
+        )
 
         #expect(event.isTeamsMeeting == true)
         #expect(event.isGoogleMeetMeeting == false)
@@ -46,22 +35,11 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event detects Teams meeting from notes field")
-    func eventDetectsTeamsMeetingFromNotes() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Teams Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.notes = "Join the meeting: https://teams.microsoft.com/l/meetup-join/19%3ameeting_xyz789"
-
-        let event = Event(from: ekEvent)
+    func eventDetectsTeamsMeetingFromNotes() {
+        let event = Event.makeTest(
+            title: "Teams Meeting",
+            notes: "Join the meeting: https://teams.microsoft.com/l/meetup-join/19%3ameeting_xyz789"
+        )
 
         #expect(event.isTeamsMeeting == true)
         #expect(event.isGoogleMeetMeeting == false)
@@ -69,22 +47,11 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event detects Teams Live meeting")
-    func eventDetectsTeamsLiveMeeting() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Teams Live Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://teams.live.com/meet/123456")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsTeamsLiveMeeting() {
+        let event = Event.makeTest(
+            title: "Teams Live Meeting",
+            url: URL(string: "https://teams.live.com/meet/123456")
+        )
 
         #expect(event.isTeamsMeeting == true)
     }
@@ -92,22 +59,11 @@ struct EventMeetingLinkTests {
     // MARK: - Google Meet Tests
 
     @Test("Event detects Google Meet meeting from URL field")
-    func eventDetectsGoogleMeetFromURL() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Google Meet"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://meet.google.com/abc-defg-hij")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsGoogleMeetFromURL() {
+        let event = Event.makeTest(
+            title: "Google Meet",
+            url: URL(string: "https://meet.google.com/abc-defg-hij")
+        )
 
         #expect(event.isGoogleMeetMeeting == true)
         #expect(event.isTeamsMeeting == false)
@@ -115,22 +71,11 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event detects Google Meet meeting from notes field")
-    func eventDetectsGoogleMeetFromNotes() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Google Meet"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.notes = "Click here to join: https://meet.google.com/xyz-qwer-tyu"
-
-        let event = Event(from: ekEvent)
+    func eventDetectsGoogleMeetFromNotes() {
+        let event = Event.makeTest(
+            title: "Google Meet",
+            notes: "Click here to join: https://meet.google.com/xyz-qwer-tyu"
+        )
 
         #expect(event.isGoogleMeetMeeting == true)
         #expect(event.isTeamsMeeting == false)
@@ -140,22 +85,11 @@ struct EventMeetingLinkTests {
     // MARK: - Zoom Meeting Tests
 
     @Test("Event detects Zoom meeting from URL field")
-    func eventDetectsZoomMeetingFromURL() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Zoom Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://zoom.us/j/123456789")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsZoomMeetingFromURL() {
+        let event = Event.makeTest(
+            title: "Zoom Meeting",
+            url: URL(string: "https://zoom.us/j/123456789")
+        )
 
         #expect(event.isZoomMeeting == true)
         #expect(event.isTeamsMeeting == false)
@@ -163,22 +97,11 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event detects Zoom meeting from notes field")
-    func eventDetectsZoomMeetingFromNotes() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Zoom Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.notes = "Join Zoom Meeting: https://zoom.us/j/987654321?pwd=abc123"
-
-        let event = Event(from: ekEvent)
+    func eventDetectsZoomMeetingFromNotes() {
+        let event = Event.makeTest(
+            title: "Zoom Meeting",
+            notes: "Join Zoom Meeting: https://zoom.us/j/987654321?pwd=abc123"
+        )
 
         #expect(event.isZoomMeeting == true)
         #expect(event.isTeamsMeeting == false)
@@ -186,22 +109,11 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event detects Zoom Gov meeting")
-    func eventDetectsZoomGovMeeting() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Zoom Gov Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://zoomgov.com/j/123456789")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsZoomGovMeeting() {
+        let event = Event.makeTest(
+            title: "Zoom Gov Meeting",
+            url: URL(string: "https://zoomgov.com/j/123456789")
+        )
 
         #expect(event.isZoomMeeting == true)
     }
@@ -209,22 +121,11 @@ struct EventMeetingLinkTests {
     // MARK: - No Meeting Link Tests
 
     @Test("Event without meeting links returns false for all")
-    func eventWithoutMeetingLinksReturnsFalse() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Regular Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.notes = "This is a regular meeting without any video conference links."
-
-        let event = Event(from: ekEvent)
+    func eventWithoutMeetingLinksReturnsFalse() {
+        let event = Event.makeTest(
+            title: "Regular Meeting",
+            notes: "This is a regular meeting without any video conference links."
+        )
 
         #expect(event.isTeamsMeeting == false)
         #expect(event.isGoogleMeetMeeting == false)
@@ -232,23 +133,12 @@ struct EventMeetingLinkTests {
     }
 
     @Test("Event with non-meeting URL returns false for all")
-    func eventWithNonMeetingURLReturnsFalse() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Event with Website"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://www.example.com")
-        ekEvent.notes = "Check out our website: https://www.example.com"
-
-        let event = Event(from: ekEvent)
+    func eventWithNonMeetingURLReturnsFalse() {
+        let event = Event.makeTest(
+            title: "Event with Website",
+            notes: "Check out our website: https://www.example.com",
+            url: URL(string: "https://www.example.com")
+        )
 
         #expect(event.isTeamsMeeting == false)
         #expect(event.isGoogleMeetMeeting == false)
@@ -258,26 +148,15 @@ struct EventMeetingLinkTests {
     // MARK: - Multiple Meeting Links Tests
 
     @Test("Event with multiple meeting links in notes detects all")
-    func eventWithMultipleMeetingLinksDetectsAll() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Multi-Platform Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.notes = """
-        Teams: https://teams.microsoft.com/l/meetup-join/123
-        Zoom: https://zoom.us/j/456
-        Google Meet: https://meet.google.com/abc-def-ghi
-        """
-
-        let event = Event(from: ekEvent)
+    func eventWithMultipleMeetingLinksDetectsAll() {
+        let event = Event.makeTest(
+            title: "Multi-Platform Meeting",
+            notes: """
+            Teams: https://teams.microsoft.com/l/meetup-join/123
+            Zoom: https://zoom.us/j/456
+            Google Meet: https://meet.google.com/abc-def-ghi
+            """
+        )
 
         #expect(event.isTeamsMeeting == true)
         #expect(event.isGoogleMeetMeeting == true)
@@ -287,22 +166,11 @@ struct EventMeetingLinkTests {
     // MARK: - Case Sensitivity Tests
 
     @Test("Event detects meeting links case-insensitively")
-    func eventDetectsMeetingLinksCaseInsensitively() async throws {
-        let permissionService = PermissionService()
-        let store = permissionService.eventStore
-
-        guard let calendar = store.calendars(for: .event).first else {
-            return
-        }
-
-        let ekEvent = EKEvent(eventStore: store)
-        ekEvent.calendar = calendar
-        ekEvent.title = "Case Test Meeting"
-        ekEvent.startDate = Date()
-        ekEvent.endDate = Date(timeIntervalSinceNow: 3600)
-        ekEvent.url = URL(string: "https://TEAMS.MICROSOFT.COM/l/meetup-join/123")
-
-        let event = Event(from: ekEvent)
+    func eventDetectsMeetingLinksCaseInsensitively() {
+        let event = Event.makeTest(
+            title: "Case Test Meeting",
+            url: URL(string: "https://TEAMS.MICROSOFT.COM/l/meetup-join/123")
+        )
 
         #expect(event.isTeamsMeeting == true)
     }

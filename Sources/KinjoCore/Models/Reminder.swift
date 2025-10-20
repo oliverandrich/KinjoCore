@@ -234,6 +234,44 @@ public struct Reminder: Identifiable, Sendable, Hashable {
         self.location = reminder.location
     }
 
+    /// Internal initialiser for testing purposes.
+    ///
+    /// This initialiser allows creating a Reminder directly without requiring EventKit.
+    /// It is intended for use in tests only.
+    internal init(
+        id: String,
+        title: String,
+        notes: String? = nil,
+        startDate: Date? = nil,
+        dueDate: Date? = nil,
+        priority: Priority = .none,
+        isCompleted: Bool = false,
+        creationDate: Date? = nil,
+        lastModifiedDate: Date? = nil,
+        completionDate: Date? = nil,
+        calendarID: String,
+        url: URL? = nil,
+        recurrenceRules: [RecurrenceRule]? = nil,
+        alarms: [Alarm]? = nil,
+        location: String? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.notes = notes
+        self.startDate = startDate
+        self.dueDate = dueDate
+        self.priority = priority
+        self.isCompleted = isCompleted
+        self.creationDate = creationDate
+        self.lastModifiedDate = lastModifiedDate
+        self.completionDate = completionDate
+        self.calendarID = calendarID
+        self.url = url
+        self.recurrenceRules = recurrenceRules
+        self.alarms = alarms
+        self.location = location
+    }
+
     // MARK: - Hashable
 
     public func hash(into hasher: inout Hasher) {

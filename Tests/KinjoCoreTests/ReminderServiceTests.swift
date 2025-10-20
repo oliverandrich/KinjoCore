@@ -45,9 +45,13 @@ struct ReminderServiceTests {
 
     @Test("ReminderList model initialises from EKCalendar")
     func reminderListInitialisesFromCalendar() async throws {
-        // Create a mock calendar (note: this won't work without proper EventKit setup)
-        // This test verifies the model structure exists and compiles
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let calendars = permissionService.eventStore.calendars(for: .reminder)
 
         if let firstCalendar = calendars.first {
@@ -63,6 +67,12 @@ struct ReminderServiceTests {
     @Test("ReminderList is Identifiable")
     func reminderListIsIdentifiable() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let calendars = permissionService.eventStore.calendars(for: .reminder)
 
         if let firstCalendar = calendars.first {
@@ -77,6 +87,12 @@ struct ReminderServiceTests {
     @Test("ReminderList equality is based on ID")
     func reminderListEqualityBasedOnID() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasReminderAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let calendars = permissionService.eventStore.calendars(for: .reminder)
 
         if let firstCalendar = calendars.first {

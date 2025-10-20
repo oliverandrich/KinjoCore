@@ -46,6 +46,12 @@ struct CalendarServiceTests {
     @Test("Calendar model initialises from EKCalendar")
     func calendarInitialisesFromEKCalendar() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasCalendarAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let ekCalendars = permissionService.eventStore.calendars(for: .event)
 
         if let firstCalendar = ekCalendars.first {
@@ -61,6 +67,12 @@ struct CalendarServiceTests {
     @Test("Calendar is Identifiable")
     func calendarIsIdentifiable() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasCalendarAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let ekCalendars = permissionService.eventStore.calendars(for: .event)
 
         if let firstCalendar = ekCalendars.first {
@@ -75,6 +87,12 @@ struct CalendarServiceTests {
     @Test("Calendar equality is based on ID")
     func calendarEqualityBasedOnID() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasCalendarAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let ekCalendars = permissionService.eventStore.calendars(for: .event)
 
         if let firstCalendar = ekCalendars.first {
@@ -97,6 +115,12 @@ struct CalendarServiceTests {
     @Test("Calendar includes subscription status")
     func calendarIncludesSubscriptionStatus() async throws {
         let permissionService = PermissionService()
+
+        guard permissionService.hasCalendarAccess else {
+            // Skip test if no permission
+            return
+        }
+
         let ekCalendars = permissionService.eventStore.calendars(for: .event)
 
         if let firstCalendar = ekCalendars.first {
