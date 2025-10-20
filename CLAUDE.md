@@ -218,6 +218,8 @@ Key principles:
 - Use `@Environment` property wrapper in views to access services
 - Services should be registered in the app's entry point using `.environment()` modifier
 
+#### Basic Service Integration
+
 Example pattern:
 ```swift
 // In KinjoCore - Service definition
@@ -245,6 +247,113 @@ struct ContentView: View {
     // Use service
 }
 ```
+
+#### SwiftData Integration with SmartFilterService
+
+The `SmartFilterService` requires a SwiftData `ModelContainer` to be injected. If your app uses its own SwiftData models alongside KinjoCore's models, create a **single shared ModelContainer** that includes all models.
+
+**Complete integration example:**
+
+```swift
+import SwiftUI
+import SwiftData
+import KinjoCore
+
+@main
+struct MyApp: App {
+    // SwiftData Container
+    let container: ModelContainer
+
+    // KinjoCore Services
+    let permissionService: PermissionService
+    let reminderService: ReminderService
+    let calendarService: CalendarService
+    let smartFilterService: SmartFilterService
+
+    init() {
+        // 1. Create ModelContainer with combined schema (KinjoCore + App models)
+        let schema = Schema([
+            // KinjoCore models
+            SmartFilter.self,
+
+            // Your app's models
+            MyAppModel.self,
+            AnotherModel.self
+        ])
+
+        let config = ModelConfiguration(
+            schema: schema,
+            groupContainer: .identifier("group.com.yourapp.shared"),  // Use your app group
+            cloudKitDatabase: .automatic  // Enables iCloud sync
+        )
+
+        do {
+            container = try ModelContainer(for: schema, configurations: config)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+
+        // 2. Initialise KinjoCore services
+        permissionService = PermissionService()
+        reminderService = ReminderService(permissionService: permissionService)
+        calendarService = CalendarService(permissionService: permissionService)
+        smartFilterService = SmartFilterService(container: container)  // Inject container
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .modelContainer(container)  // For SwiftUI @Query
+                .environment(permissionService)
+                .environment(reminderService)
+                .environment(calendarService)
+                .environment(smartFilterService)
+        }
+    }
+}
+```
+
+**Using services and SwiftData in views:**
+
+```swift
+import SwiftUI
+import SwiftData
+import KinjoCore
+
+struct ContentView: View {
+    // Access KinjoCore services
+    @Environment(ReminderService.self) private var reminderService
+    @Environment(SmartFilterService.self) private var smartFilterService
+
+    // Query your app's SwiftData models
+    @Query private var myModels: [MyAppModel]
+
+    var body: some View {
+        List {
+            // Use reminders from KinjoCore
+            ForEach(reminderService.reminders) { reminder in
+                Text(reminder.title)
+            }
+
+            // Use your app's models
+            ForEach(myModels) { model in
+                Text(model.name)
+            }
+        }
+        .task {
+            // Fetch data
+            try? await reminderService.fetchReminders()
+            try? await smartFilterService.fetchFilters()
+        }
+    }
+}
+```
+
+**Important notes:**
+- Use a **single ModelContainer** for all SwiftData models (both KinjoCore and your app)
+- Configure the same `groupContainer` identifier for data sharing between targets (app, widgets, extensions)
+- The `SmartFilterService` requires `SmartFilter.self` in the schema
+- iCloud sync is automatically enabled with `cloudKitDatabase: .automatic`
 
 ### Testing Framework
 This project uses the **Swift Testing** framework (introduced in Swift 5.9+), NOT XCTest. Key differences:

@@ -18,7 +18,11 @@ dependencies: [
 
 ## Setting Up Services
 
-KinjoCore uses three main services that should be injected into your SwiftUI environment:
+KinjoCore provides several services that should be injected into your SwiftUI environment. Some services require additional setup with SwiftData.
+
+### Basic Setup (Without SmartFilters)
+
+For basic reminder and calendar functionality:
 
 ```swift
 import SwiftUI
@@ -45,6 +49,85 @@ struct MyApp: App {
     }
 }
 ```
+
+### Complete Setup (With SmartFilters)
+
+For full functionality including SmartFilters with iCloud sync:
+
+```swift
+import SwiftUI
+import SwiftData
+import KinjoCore
+
+@main
+struct MyApp: App {
+    // SwiftData Container
+    let container: ModelContainer
+
+    // KinjoCore Services
+    let permissionService: PermissionService
+    let reminderService: ReminderService
+    let calendarService: CalendarService
+    let smartFilterService: SmartFilterService
+
+    init() {
+        // 1. Create ModelContainer with KinjoCore models
+        let schema = Schema([
+            SmartFilter.self  // Required for SmartFilterService
+        ])
+
+        let config = ModelConfiguration(
+            schema: schema,
+            groupContainer: .identifier("group.com.yourapp.shared"),
+            cloudKitDatabase: .automatic  // Enables iCloud sync
+        )
+
+        do {
+            container = try ModelContainer(for: schema, configurations: config)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+
+        // 2. Initialise KinjoCore services
+        permissionService = PermissionService()
+        reminderService = ReminderService(permissionService: permissionService)
+        calendarService = CalendarService(permissionService: permissionService)
+        smartFilterService = SmartFilterService(container: container)
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .modelContainer(container)  // For SwiftUI @Query
+                .environment(permissionService)
+                .environment(reminderService)
+                .environment(calendarService)
+                .environment(smartFilterService)
+        }
+        .task {
+            // Ensure built-in filters exist on first launch
+            try? await smartFilterService.ensureBuiltInFilters()
+        }
+    }
+}
+```
+
+### Adding Your Own SwiftData Models
+
+If your app uses its own SwiftData models alongside KinjoCore:
+
+```swift
+let schema = Schema([
+    // KinjoCore models
+    SmartFilter.self,
+
+    // Your app's models
+    MyAppModel.self,
+    AnotherModel.self
+])
+```
+
+> Important: Use a single `ModelContainer` for all SwiftData models (both KinjoCore and your app) to prevent conflicts. Configure the same `groupContainer` identifier for data sharing between targets (app, widgets, extensions).
 
 ## Requesting Permissions
 

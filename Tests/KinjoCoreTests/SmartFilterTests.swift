@@ -16,10 +16,22 @@
 import Testing
 import Foundation
 import EventKit
+import SwiftData
 @testable import KinjoCore
 
 @Suite("Smart Filter Tests")
 struct SmartFilterTests {
+
+    /// Creates an in-memory ModelContainer for testing SmartFilterService.
+    @MainActor
+    static func makeTestContainer() throws -> ModelContainer {
+        let schema = Schema([SmartFilter.self])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true
+        )
+        return try ModelContainer(for: schema, configurations: config)
+    }
 
     @Test("FilterCriteria is Codable")
     func filterCriteriaIsCodable() throws {
@@ -169,7 +181,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService can create filter")
     @MainActor
     func smartFilterServiceCanCreateFilter() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.create", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         let criteria = FilterCriteria(
             completionFilter: .incomplete,
@@ -196,7 +209,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService rejects empty name")
     @MainActor
     func smartFilterServiceRejectsEmptyName() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.emptyname", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         do {
             _ = try await service.createFilter(
@@ -213,7 +227,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService can update filter")
     @MainActor
     func smartFilterServiceCanUpdateFilter() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.update", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         let filter = try await service.createFilter(
             name: "Original Name",
@@ -239,7 +254,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService prevents modifying built-in filters")
     @MainActor
     func smartFilterServicePreventsModifyingBuiltInFilters() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.builtin", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         try await service.ensureBuiltInFilters()
         try await service.fetchFilters()
@@ -269,7 +285,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService can reorder filters")
     @MainActor
     func smartFilterServiceCanReorderFilters() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.reorder", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         let filter1 = try await service.createFilter(
             name: "Filter 1",
@@ -310,9 +327,8 @@ struct SmartFilterTests {
     @Test("SmartFilterService ensureBuiltInFilters creates missing filters")
     @MainActor
     func smartFilterServiceEnsureBuiltInFiltersCreatesMissingFilters() async throws {
-        // Use a unique identifier for each test run to ensure a clean database
-        let uniqueIdentifier = "test.smartfilter.ensurebuiltin.\(UUID().uuidString)"
-        let service = SmartFilterService(groupIdentifier: uniqueIdentifier, isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let service = SmartFilterService(container: container)
 
         try await service.ensureBuiltInFilters()
         try await service.fetchFilters()
@@ -333,7 +349,8 @@ struct SmartFilterTests {
     func smartFilterServiceApplyFilterIntegratesWithReminderService() async throws {
         let permissionService = PermissionService()
         let reminderService = ReminderService(permissionService: permissionService)
-        let filterService = SmartFilterService(groupIdentifier: "test.smartfilter.apply", isInMemory: true)
+        let container = try Self.makeTestContainer()
+        let filterService = SmartFilterService(container: container)
 
         guard permissionService.hasReminderAccess else {
             return

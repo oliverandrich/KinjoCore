@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: `SmartFilterService` now requires a `ModelContainer` to be injected via the initializer instead of creating its own container. This allows apps to use a single ModelContainer for both KinjoCore models and their own SwiftData models, preventing conflicts and enabling better integration.
+- Updated documentation in `GettingStarted.md` to include complete SmartFilterService setup with ModelContainer dependency injection
+- Updated documentation in `WorkingWithFilters.md` to reflect new SmartFilterService initialisation pattern
+
 ## [0.11.1] - 2025-10-20
 
 ### Added

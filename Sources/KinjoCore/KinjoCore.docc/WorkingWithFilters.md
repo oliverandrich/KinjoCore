@@ -208,6 +208,8 @@ SmartFilters allow you to create and persist custom filter configurations with i
 
 ### Setting Up SmartFilterService
 
+The `SmartFilterService` requires a SwiftData `ModelContainer` to be injected. Set this up in your app's entry point:
+
 ```swift
 import SwiftUI
 import SwiftData
@@ -215,40 +217,43 @@ import KinjoCore
 
 @main
 struct MyApp: App {
-    let modelContainer: ModelContainer
+    let container: ModelContainer
     let smartFilterService: SmartFilterService
 
     init() {
-        do {
-            // Set up SwiftData with iCloud sync
-            let schema = Schema([SmartFilter.self])
-            let config = ModelConfiguration(
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .automatic
-            )
-            modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [config]
-            )
+        // Create ModelContainer with KinjoCore models
+        let schema = Schema([SmartFilter.self])
+        let config = ModelConfiguration(
+            schema: schema,
+            groupContainer: .identifier("group.com.yourapp.shared"),
+            cloudKitDatabase: .automatic  // Enables iCloud sync
+        )
 
-            // Initialise SmartFilterService
-            smartFilterService = SmartFilterService(
-                groupIdentifier: "group.com.yourapp.kinjocore"
-            )
+        do {
+            container = try ModelContainer(for: schema, configurations: config)
         } catch {
-            fatalError("Failed to initialise ModelContainer: \(error)")
+            fatalError("Failed to create ModelContainer: \(error)")
         }
+
+        // Initialise SmartFilterService with container injection
+        smartFilterService = SmartFilterService(container: container)
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .modelContainer(container)
                 .environment(smartFilterService)
-                .modelContainer(modelContainer)
+        }
+        .task {
+            // Ensure built-in filters exist on first launch
+            try? await smartFilterService.ensureBuiltInFilters()
         }
     }
 }
 ```
+
+> Tip: For a complete setup example including all KinjoCore services, see <doc:GettingStarted#Complete-Setup-With-SmartFilters>.
 
 ### Built-In Filters
 
