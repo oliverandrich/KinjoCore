@@ -169,7 +169,7 @@ struct SmartFilterTests {
     @Test("SmartFilterService can create filter")
     @MainActor
     func smartFilterServiceCanCreateFilter() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.create")
+        let service = SmartFilterService(groupIdentifier: "test.smartfilter.create", isInMemory: true)
 
         let criteria = FilterCriteria(
             completionFilter: .incomplete,
@@ -196,7 +196,7 @@ struct SmartFilterTests {
     @Test("SmartFilterService rejects empty name")
     @MainActor
     func smartFilterServiceRejectsEmptyName() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.emptyname")
+        let service = SmartFilterService(groupIdentifier: "test.smartfilter.emptyname", isInMemory: true)
 
         do {
             _ = try await service.createFilter(
@@ -213,7 +213,7 @@ struct SmartFilterTests {
     @Test("SmartFilterService can update filter")
     @MainActor
     func smartFilterServiceCanUpdateFilter() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.update")
+        let service = SmartFilterService(groupIdentifier: "test.smartfilter.update", isInMemory: true)
 
         let filter = try await service.createFilter(
             name: "Original Name",
@@ -239,7 +239,7 @@ struct SmartFilterTests {
     @Test("SmartFilterService prevents modifying built-in filters")
     @MainActor
     func smartFilterServicePreventsModifyingBuiltInFilters() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.builtin")
+        let service = SmartFilterService(groupIdentifier: "test.smartfilter.builtin", isInMemory: true)
 
         try await service.ensureBuiltInFilters()
         try await service.fetchFilters()
@@ -269,7 +269,7 @@ struct SmartFilterTests {
     @Test("SmartFilterService can reorder filters")
     @MainActor
     func smartFilterServiceCanReorderFilters() async throws {
-        let service = SmartFilterService(groupIdentifier: "test.smartfilter.reorder")
+        let service = SmartFilterService(groupIdentifier: "test.smartfilter.reorder", isInMemory: true)
 
         let filter1 = try await service.createFilter(
             name: "Filter 1",
@@ -312,7 +312,7 @@ struct SmartFilterTests {
     func smartFilterServiceEnsureBuiltInFiltersCreatesMissingFilters() async throws {
         // Use a unique identifier for each test run to ensure a clean database
         let uniqueIdentifier = "test.smartfilter.ensurebuiltin.\(UUID().uuidString)"
-        let service = SmartFilterService(groupIdentifier: uniqueIdentifier)
+        let service = SmartFilterService(groupIdentifier: uniqueIdentifier, isInMemory: true)
 
         try await service.ensureBuiltInFilters()
         try await service.fetchFilters()
@@ -333,7 +333,7 @@ struct SmartFilterTests {
     func smartFilterServiceApplyFilterIntegratesWithReminderService() async throws {
         let permissionService = PermissionService()
         let reminderService = ReminderService(permissionService: permissionService)
-        let filterService = SmartFilterService(groupIdentifier: "test.smartfilter.apply")
+        let filterService = SmartFilterService(groupIdentifier: "test.smartfilter.apply", isInMemory: true)
 
         guard permissionService.hasReminderAccess else {
             return

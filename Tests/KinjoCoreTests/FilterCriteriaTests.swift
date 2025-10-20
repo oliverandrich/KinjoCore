@@ -50,7 +50,7 @@ struct FilterCriteriaTests {
 
         switch selection {
         case .all:
-            #expect(true) // Success
+            #expect(Bool(true)) // Success
         default:
             Issue.record("Expected .all selection")
         }
@@ -153,7 +153,7 @@ struct FilterCriteriaTests {
 
         switch criteria {
         case .all:
-            #expect(true) // Success
+            #expect(Bool(true)) // Success
         default:
             Issue.record("Expected .all criteria")
         }
@@ -273,7 +273,7 @@ struct FilterCriteriaTests {
 
         switch criteria.listSelection {
         case .all:
-            #expect(true)
+            #expect(Bool(true))
         default:
             Issue.record("Expected .all for listSelection")
         }

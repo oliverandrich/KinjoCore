@@ -289,7 +289,20 @@ public final class TaskParser: Sendable {
                     let containsTime = timeIndicators.contains { matchText.lowercased().contains($0) }
 
                     if containsTime {
-                        let components = calendar.dateComponents([.hour, .minute], from: date)
+                        // NSDataDetector creates dates in the system timezone, but we want to interpret
+                        // the time components as if they were in the calendar's timezone.
+                        // So we extract the components using the system timezone (matching NSDataDetector's behavior)
+                        // and then set them to the calendar's timezone.
+                        var systemCalendar = Foundation.Calendar(identifier: .gregorian)
+                        systemCalendar.timeZone = TimeZone.current
+                        let componentSet: Set<Foundation.Calendar.Component> = [.hour, .minute]
+                        let systemComponents = systemCalendar.dateComponents(componentSet, from: date)
+
+                        var components = DateComponents()
+                        components.hour = systemComponents.hour
+                        components.minute = systemComponents.minute
+                        components.timeZone = calendar.timeZone
+
                         if let hour = components.hour, hour != 0 || components.minute != 0 {
                             extractedTime = components
                         }
@@ -411,7 +424,20 @@ public final class TaskParser: Sendable {
             let containsTime = timeIndicators.contains { matchText.lowercased().contains($0) }
 
             if containsTime {
-                let components = calendar.dateComponents([.hour, .minute], from: date)
+                // NSDataDetector creates dates in the system timezone, but we want to interpret
+                // the time components as if they were in the calendar's timezone.
+                // So we extract the components using the system timezone (matching NSDataDetector's behavior)
+                // and then set them to the calendar's timezone.
+                var systemCalendar = Foundation.Calendar(identifier: .gregorian)
+                systemCalendar.timeZone = TimeZone.current
+                let componentSet: Set<Foundation.Calendar.Component> = [.hour, .minute]
+                let systemComponents = systemCalendar.dateComponents(componentSet, from: date)
+
+                var components = DateComponents()
+                components.hour = systemComponents.hour
+                components.minute = systemComponents.minute
+                components.timeZone = calendar.timeZone
+
                 if let hour = components.hour, hour != 0 || components.minute != 0 {
                     extractedTime = components
                 }
@@ -663,6 +689,7 @@ public final class TaskParser: Sendable {
                    var hour = Int(input[hourRange])
                 {
                     var components = DateComponents()
+                    components.timeZone = calendar.timeZone
 
                     // Handle PM conversion (add 12 to hour if it's PM and not already 12)
                     if matchText.lowercased().contains("pm") && hour != 12 {

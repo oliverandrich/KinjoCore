@@ -37,13 +37,17 @@ public final class SmartFilterService {
 
     /// Creates a new smart filter service.
     ///
-    /// - Parameter groupIdentifier: The app group identifier for sharing data between targets.
-    ///   Defaults to a standard group identifier. When using app extensions or watchOS,
-    ///   ensure all targets use the same group identifier.
-    public init(groupIdentifier: String = "group.com.kinjo.shared") {
+    /// - Parameters:
+    ///   - groupIdentifier: The app group identifier for sharing data between targets.
+    ///     Defaults to a standard group identifier. When using app extensions or watchOS,
+    ///     ensure all targets use the same group identifier.
+    ///   - isInMemory: If true, stores data only in memory (useful for testing).
+    ///     Defaults to false for persistent storage.
+    public init(groupIdentifier: String = "group.com.kinjo.shared", isInMemory: Bool = false) {
         let schema = Schema([SmartFilter.self])
         let config = ModelConfiguration(
             schema: schema,
+            isStoredInMemoryOnly: isInMemory,
             groupContainer: .identifier(groupIdentifier),
             cloudKitDatabase: .automatic
         )
