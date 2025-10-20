@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removed unused Scripts directory containing development debug tools
+
 ## [0.12.0] - 2025-10-20
 
 ### Changed
